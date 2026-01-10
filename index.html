@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planejador Financeiro</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="icon" type="image/png" href="src/favicon.png">
+</head>
+<body>
+
+    <div id="login-overlay" class="login-screen">
+        <div class="login-card">
+            <h1>CoinManager 🪙</h1>
+            <p>Seu planejador financeiro inteligente.</p>
+            <button id="btnLogin" class="btn-google">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
+                Entrar com Google
+            </button>
+        </div>
+    </div>
+
+    <div id="app-container" class="container" style="display: none;">
+        
+        <div class="user-header">
+            <div class="user-info">
+                <img id="userPhoto" src="" alt="User" class="avatar">
+                <span id="userName">Carregando...</span>
+            </div>
+            <button id="btnLogout" class="btn-logout">Sair</button>
+        </div>
+
+        <header class="dashboard-cards">
+            <div class="card saldo-card highlight-card">
+                <div class="header-top">
+                    <p>Planejamento</p>
+                    <input type="month" id="filtroMes" class="input-mes-dark">
+                </div>
+                <p class="label-saldo">Saldo Previsto</p>
+                <div class="saldo-valor" id="displaySaldo">R$ ...</div>
+            </div>
+
+            <div class="card reserva-card">
+                <h3><span class="material-icons-round" style="color: var(--primary)">savings</span> Reserva (20%)</h3>
+                <div class="reserva-valor" id="displayReserva">R$ 0,00</div>
+                <p class="reserva-info">Meta de economia mensal.</p>
+            </div>
+
+            <div class="card info-card">
+                 <h3><span class="material-icons-round" style="color: var(--text-muted)">insights</span> Status</h3>
+                 <p class="dica-texto" id="statusFinanceiro">Analisando seus dados...</p>
+            </div>
+        </header>
+
+        <section class="graficos-grid">
+            <div class="card grafico-container">
+                <h3>Fluxo de Caixa</h3>
+                <div class="canvas-wrapper"><canvas id="graficoRosca"></canvas></div>
+            </div>
+            <div class="card grafico-container">
+                <h3>Gastos por Categoria</h3>
+                <div class="canvas-wrapper"><canvas id="graficoBarras"></canvas></div>
+            </div>
+        </section>
+
+        <div class="content-grid">
+            <section class="card formulario">
+                <h3><span class="material-icons-round">add_circle</span> Novo Lançamento</h3>
+                <div class="input-group">
+                    <input type="text" id="desc" placeholder="Descrição (Ex: Aluguel)">
+                </div>
+                <div class="input-group grid-3">
+                    <input type="number" id="valor" placeholder="Valor" step="0.01">
+                    <select id="categoria">
+                        <option value="Moradia">🏠 Moradia</option>
+                        <option value="Alimentação">🍔 Alimentação</option>
+                        <option value="Transporte">🚗 Transporte</option>
+                        <option value="Lazer">🎉 Lazer</option>
+                        <option value="Saúde">💊 Saúde</option>
+                        <option value="Educação">📚 Educação</option>
+                        <option value="Contas">💡 Contas</option>
+                        <option value="Salário">💰 Salário</option>
+                        <option value="Outros">📦 Outros</option>
+                    </select>
+                    <select id="tipo">
+                        <option value="saida">Despesa (-)</option>
+                        <option value="entrada">Renda (+)</option>
+                    </select>
+                </div>
+                <button id="btnAdicionar">Salvar Lançamento</button>
+            </section>
+
+            <section class="card tabela-card">
+                <h3><span class="material-icons-round">history</span> Detalhamento</h3>
+                <div class="tabela-container">
+                    <table class="tabela-financas">
+                        <thead>
+                            <tr>
+                                <th>Categoria</th>
+                                <th>Descrição</th>
+                                <th>Valor</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaTransacoes"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
