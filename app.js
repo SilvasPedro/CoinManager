@@ -1,20 +1,15 @@
-// ======================================================
-// 1. IMPORTAÇÕES (Auth + Firestore + App)
-// ======================================================
+// 1. IMPORTAÇÕES (Adicionei updateDoc)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { 
     getFirestore, collection, addDoc, onSnapshot, 
-    query, where, deleteDoc, doc 
+    query, where, deleteDoc, doc, updateDoc 
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 import { 
     getAuth, signInWithPopup, GoogleAuthProvider, 
     signOut, onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-// ======================================================
-// 2. CONFIGURAÇÃO DO FIREBASE
-// (Mantenha as SUAS chaves aqui!)
-// ======================================================
+// 2. CONFIGURAÇÃO (SUAS CHAVES)
 const firebaseConfig = {
     apiKey: "AIzaSyC_4uHxa8NsmExmbZ602r8IsUZg6yvbO7o", 
     authDomain: "coinmanager-7e0bd.firebaseapp.com",
@@ -24,198 +19,124 @@ const firebaseConfig = {
     appId: "1:812321893222:web:b75756885a781ca09e36a7"
 };
 
-// Inicializa Serviços
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// ======================================================
-// 3. ELEMENTOS DO DOM (HTML)
-// ======================================================
-// Telas
+// 3. ELEMENTOS DOM
+// Login
 const loginScreen = document.getElementById('login-overlay');
 const appContainer = document.getElementById('app-container');
-
-// Botões de Auth
 const btnLogin = document.getElementById('btnLogin');
 const btnLogout = document.getElementById('btnLogout');
-
-// Perfil
 const userPhoto = document.getElementById('userPhoto');
 const userName = document.getElementById('userName');
 
-// Funcionais
+// App Principal
 const filtroMes = document.getElementById('filtroMes');
 const btnAdicionar = document.getElementById('btnAdicionar');
 const tabelaEl = document.getElementById('listaTransacoes');
-
-// Dashboard Cards
 const saldoEl = document.getElementById('displaySaldo');
 const reservaEl = document.getElementById('displayReserva');
-const statusEl = document.getElementById('statusFinanceiro'); // Elemento do Status
+const statusEl = document.getElementById('statusFinanceiro');
 
-// Variáveis Globais de Controle
+// Modal de Edição
+const modalEditar = document.getElementById('modal-editar');
+const btnCancelarEdit = document.getElementById('btnCancelarEdit');
+const btnSalvarEdit = document.getElementById('btnSalvarEdit');
+// Inputs do Modal
+const editDesc = document.getElementById('edit-desc');
+const editValor = document.getElementById('edit-valor');
+const editCategoria = document.getElementById('edit-categoria');
+const editTipo = document.getElementById('edit-tipo');
+
+// Variáveis Globais
 let chartRosca = null;
 let chartBarras = null;
-let unsubscribe = null; // Para desligar o listener do banco
-let usuarioAtual = null; // Guarda o usuário logado
+let unsubscribe = null;
+let usuarioAtual = null;
+let idEmEdicao = null; // Guarda qual ID estamos editando no momento
 
-// Define Mês Atual no Input
 filtroMes.value = new Date().toISOString().slice(0, 7);
 
-
 // ======================================================
-// 4. SISTEMA DE AUTENTICAÇÃO (LOGIN/LOGOUT)
+// LOGIN / LOGOUT
 // ======================================================
+btnLogin.addEventListener('click', () => signInWithPopup(auth, provider));
+btnLogout.addEventListener('click', () => signOut(auth).then(() => window.location.reload()));
 
-// Login com Google
-btnLogin.addEventListener('click', () => {
-    signInWithPopup(auth, provider)
-        .then(() => {
-            // Sucesso: O onAuthStateChanged vai assumir daqui
-        })
-        .catch((error) => {
-            console.error("Erro no login:", error);
-            alert("Erro ao conectar com Google. Verifique se o domínio está autorizado no Firebase.");
-        });
-});
-
-// Logout
-btnLogout.addEventListener('click', () => {
-    signOut(auth).then(() => {
-        window.location.reload(); // Recarrega para limpar tudo
-    });
-});
-
-// Monitor de Estado (O "Porteiro")
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Usuário Entrou
         usuarioAtual = user;
-        
-        // Atualiza UI do Topo
-        userName.innerText = user.displayName.split(" ")[0]; // Só o primeiro nome
+        userName.innerText = user.displayName.split(" ")[0];
         userPhoto.src = user.photoURL || "https://via.placeholder.com/40";
-        
-        // Troca as telas
         loginScreen.style.display = 'none';
         appContainer.style.display = 'block';
-
-        // Carrega os dados deste usuário
         carregarDados();
-
     } else {
-        // Usuário Saiu
         loginScreen.style.display = 'flex';
         appContainer.style.display = 'none';
         usuarioAtual = null;
     }
 });
 
-
 // ======================================================
-// 5. FUNÇÕES PRINCIPAIS (CRUD)
+// FUNÇÕES PRINCIPAIS
 // ======================================================
 
-// --- ADICIONAR TRANSAÇÃO ---
 async function adicionar() {
-    if (!usuarioAtual) return; // Segurança
-
+    if (!usuarioAtual) return;
     const desc = document.getElementById('desc').value;
-    const valorInput = document.getElementById('valor').value;
+    const valor = parseFloat(document.getElementById('valor').value);
     const categoria = document.getElementById('categoria').value;
     const tipo = document.getElementById('tipo').value;
     const mesReferencia = filtroMes.value;
 
-    if (!desc || valorInput === "") return alert("Preencha descrição e valor!");
+    if (!desc || isNaN(valor)) return alert("Preencha tudo!");
 
-    const valor = parseFloat(valorInput);
-
-    // Feedback visual
-    btnAdicionar.disabled = true;
     btnAdicionar.innerText = "Salvando...";
-
     try {
         await addDoc(collection(db, "financas"), {
-            uid: usuarioAtual.uid, // VINCULA AO USUÁRIO
-            descricao: desc,
-            valor: valor,
-            tipo: tipo,
-            categoria: categoria,
-            referencia: mesReferencia,
-            criadoEm: Date.now()
+            uid: usuarioAtual.uid,
+            descricao: desc, valor: valor, tipo: tipo, categoria: categoria,
+            referencia: mesReferencia, criadoEm: Date.now()
         });
-
-        // Limpa campos
         document.getElementById('desc').value = "";
         document.getElementById('valor').value = "";
-        document.getElementById('desc').focus();
-
-    } catch (e) {
-        console.error("Erro ao salvar:", e);
-        alert("Erro ao salvar lançamento.");
-    } finally {
-        btnAdicionar.disabled = false;
-        btnAdicionar.innerText = "Salvar Lançamento";
-    }
+    } catch (e) { console.error(e); } 
+    finally { btnAdicionar.innerText = "Salvar Lançamento"; }
 }
 
-// --- CARREGAR DADOS (LEITURA EM TEMPO REAL) ---
 function carregarDados() {
-    // Se já tinha um listener, desliga para não duplicar
     if (unsubscribe) unsubscribe();
     if (!usuarioAtual) return;
 
-    const mesSelecionado = filtroMes.value;
-
-    // QUERY: Filtra por Usuário E Mês
-    const q = query(
-        collection(db, "financas"),
-        where("uid", "==", usuarioAtual.uid),
-        where("referencia", "==", mesSelecionado)
-    );
+    const q = query(collection(db, "financas"), where("uid", "==", usuarioAtual.uid), where("referencia", "==", filtroMes.value));
 
     unsubscribe = onSnapshot(q, (snapshot) => {
         tabelaEl.innerHTML = "";
-        
-        let totalEntrada = 0;
-        let totalSaida = 0;
+        let totalEntrada = 0, totalSaida = 0;
         const gastosPorCategoria = {};
-
-        // Converter para array para ordenar manualmente
         let listaDocs = [];
+
         snapshot.forEach(doc => listaDocs.push({ id: doc.id, ...doc.data() }));
-        
-        // Ordena por data de criação (mais recente primeiro)
         listaDocs.sort((a, b) => b.criadoEm - a.criadoEm);
 
         if (listaDocs.length === 0) {
-            tabelaEl.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#666;">Nenhum lançamento neste mês.</td></tr>';
-            
-            // Zera tudo visualmente
-            saldoEl.innerText = "R$ 0,00";
-            reservaEl.innerText = "R$ 0,00";
-            statusEl.innerText = "Aguardando dados...";
-            atualizarGraficos(0, 0, {});
-            return;
+            tabelaEl.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#666;">Nada aqui.</td></tr>';
+            atualizarDashboard(0, 0, {}); return;
         }
 
-        // Loop principal
         listaDocs.forEach((dados) => {
             const valor = dados.valor || 0;
-
-            if (dados.tipo === 'entrada') {
-                totalEntrada += valor;
-            } else {
+            if (dados.tipo === 'entrada') totalEntrada += valor;
+            else {
                 totalSaida += valor;
-                // Agrupa categorias (exceto Salário, que não é gasto)
-                if (dados.categoria !== 'Salário') {
-                    gastosPorCategoria[dados.categoria] = (gastosPorCategoria[dados.categoria] || 0) + valor;
-                }
+                if (dados.categoria !== 'Salário') gastosPorCategoria[dados.categoria] = (gastosPorCategoria[dados.categoria] || 0) + valor;
             }
 
-            // Cria linha na tabela
+            // Cria linha com botões de Ação
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><span class="tag-categoria">${dados.categoria}</span></td>
@@ -223,7 +144,10 @@ function carregarDados() {
                 <td class="${dados.tipo === 'entrada' ? 'entrada' : 'saida'}">
                     ${dados.tipo === 'entrada' ? '+' : '-'} R$ ${valor.toFixed(2)}
                 </td>
-                <td>
+                <td style="white-space: nowrap;">
+                    <button class="btn-acao btn-editar" onclick="abrirModalEdicao('${dados.id}', '${dados.descricao}', ${valor}, '${dados.categoria}', '${dados.tipo}')">
+                        <span class="material-icons-round">edit</span>
+                    </button>
                     <button class="btn-acao btn-deletar" onclick="deletarItem('${dados.id}')">
                         <span class="material-icons-round">delete</span>
                     </button>
@@ -232,147 +156,107 @@ function carregarDados() {
             tabelaEl.appendChild(tr);
         });
 
-        // 1. Atualiza Saldo
-        const saldo = totalEntrada - totalSaida;
-        saldoEl.innerText = `R$ ${saldo.toFixed(2)}`;
-
-        // 2. Atualiza Reserva (20% se positivo)
-        const reserva = saldo > 0 ? saldo * 0.20 : 0;
-        reservaEl.innerText = `R$ ${reserva.toFixed(2)}`;
-
-        // 3. Atualiza Status Financeiro (NOVO!)
-        atualizarStatusFinanceiro(totalEntrada, totalSaida);
-
-        // 4. Atualiza Gráficos
-        atualizarGraficos(totalEntrada, totalSaida, gastosPorCategoria);
+        atualizarDashboard(totalEntrada, totalSaida, gastosPorCategoria);
     });
 }
 
-// --- DELETAR ITEM ---
-// Precisa ser global (window) para o HTML acessar via onclick
+// ======================================================
+// LÓGICA DE EDIÇÃO (NOVO!)
+// ======================================================
+
+// 1. Abre o Modal preenchido
+window.abrirModalEdicao = function(id, desc, valor, categoria, tipo) {
+    idEmEdicao = id; // Salva o ID globalmente para saber qual atualizar depois
+    
+    // Preenche os campos do modal
+    editDesc.value = desc;
+    editValor.value = valor;
+    editCategoria.value = categoria;
+    editTipo.value = tipo;
+
+    // Mostra o modal
+    modalEditar.style.display = 'flex';
+}
+
+// 2. Fecha o Modal
+btnCancelarEdit.addEventListener('click', () => {
+    modalEditar.style.display = 'none';
+    idEmEdicao = null;
+});
+
+// 3. Salva no Firebase
+btnSalvarEdit.addEventListener('click', async () => {
+    if(!idEmEdicao) return;
+    
+    const novaDesc = editDesc.value;
+    const novoValor = parseFloat(editValor.value);
+    const novaCat = editCategoria.value;
+    const novoTipo = editTipo.value;
+
+    if(!novaDesc || isNaN(novoValor)) return alert("Preencha corretamente.");
+
+    btnSalvarEdit.innerText = "Salvando...";
+
+    try {
+        // ATUALIZA NO FIRESTORE
+        const docRef = doc(db, "financas", idEmEdicao);
+        await updateDoc(docRef, {
+            descricao: novaDesc,
+            valor: novoValor,
+            categoria: novaCat,
+            tipo: novoTipo
+        });
+        
+        modalEditar.style.display = 'none'; // Fecha
+    } catch (error) {
+        console.error("Erro ao editar:", error);
+        alert("Erro ao atualizar.");
+    } finally {
+        btnSalvarEdit.innerText = "Salvar Alterações";
+        idEmEdicao = null;
+    }
+});
+
+
+// ======================================================
+// FUNÇÕES AUXILIARES
+// ======================================================
 window.deletarItem = async function(id) {
-    if (confirm("Tem certeza que deseja apagar este item?")) {
-        try {
-            await deleteDoc(doc(db, "financas", id));
-        } catch (e) {
-            console.error("Erro ao deletar:", e);
-        }
-    }
+    if (confirm("Apagar item?")) await deleteDoc(doc(db, "financas", id));
 }
 
-
-// ======================================================
-// 6. LÓGICA DE INTELIGÊNCIA (GRÁFICOS E STATUS)
-// ======================================================
-
-// --- ATUALIZA STATUS (O "MÉDICO") ---
-function atualizarStatusFinanceiro(entrada, saida) {
-    // Caso 0: Sem renda ainda
-    if (entrada === 0) {
-        statusEl.innerHTML = `<span style="color: var(--text-muted)">Adicione uma renda para começar.</span>`;
-        return;
-    }
-
+function atualizarDashboard(entrada, saida, categorias) {
     const saldo = entrada - saida;
-    const percentualGasto = (saida / entrada) * 100;
+    saldoEl.innerText = `R$ ${saldo.toFixed(2)}`;
+    reservaEl.innerText = `R$ ${(saldo > 0 ? saldo * 0.2 : 0).toFixed(2)}`;
+    
+    // Status
+    if(entrada === 0) statusEl.innerHTML = '<span style="color:#888">Sem dados.</span>';
+    else if(saldo < 0) statusEl.innerHTML = '<span style="color:var(--color-danger)">🚨 Crítico</span>';
+    else if((saida/entrada) > 0.9) statusEl.innerHTML = '<span style="color:#facc15">⚠️ Atenção</span>';
+    else statusEl.innerHTML = '<span style="color:var(--color-success)">✅ Excelente</span>';
 
-    // Caso 1: Vermelho (Negativo)
-    if (saldo < 0) {
-        statusEl.innerHTML = `
-            <span style="color: var(--color-danger); font-weight: bold; display: flex; align-items: center; gap: 6px;">
-                <span class="material-icons-round">trending_down</span>
-                Crítico: Gastos maiores que a renda!
-            </span>`;
-        return;
-    }
-
-    // Caso 2: Amarelo (Alerta > 90%)
-    if (percentualGasto >= 90) {
-        statusEl.innerHTML = `
-            <span style="color: #facc15; font-weight: bold; display: flex; align-items: center; gap: 6px;">
-                <span class="material-icons-round">warning</span>
-                Atenção: Orçamento no limite.
-            </span>`;
-        return;
-    }
-
-    // Caso 3: Verde (Saudável)
-    statusEl.innerHTML = `
-        <span style="color: var(--color-success); font-weight: bold; display: flex; align-items: center; gap: 6px;">
-            <span class="material-icons-round">verified</span>
-            Saúde Financeira Excelente!
-        </span>`;
+    atualizarGraficos(entrada, saida, categorias);
 }
 
-// --- ATUALIZA GRÁFICOS (CHART.JS) ---
 function atualizarGraficos(entrada, saida, categorias) {
-    // 1. Gráfico Rosca (Entrada vs Saída)
     const ctxRosca = document.getElementById('graficoRosca').getContext('2d');
     if (chartRosca) chartRosca.destroy();
-
     chartRosca = new Chart(ctxRosca, {
         type: 'doughnut',
-        data: {
-            labels: ['Renda', 'Despesas'],
-            datasets: [{
-                data: [entrada, saida],
-                backgroundColor: ['#34d399', '#f87171'], // Cores do tema
-                borderWidth: 0,
-                hoverOffset: 10
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'right', labels: { color: '#94a3b8' } }
-            },
-            layout: { padding: 10 },
-            cutout: '70%' // Rosca mais fina
-        }
+        data: { labels: ['Renda', 'Despesas'], datasets: [{ data: [entrada, saida], backgroundColor: ['#34d399', '#f87171'], borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels:{color:'#94a3b8'} } }, cutout: '70%' }
     });
 
-    // 2. Gráfico Barras (Categorias)
     const ctxBarras = document.getElementById('graficoBarras').getContext('2d');
     if (chartBarras) chartBarras.destroy();
-
-    const labels = Object.keys(categorias);
-    const valores = Object.values(categorias);
-    const cores = ['#0d9488', '#0ea5e9', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e'];
-
     chartBarras = new Chart(ctxBarras, {
         type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Gastos',
-                data: valores,
-                backgroundColor: cores.slice(0, labels.length),
-                borderRadius: 6,
-                borderSkipped: false
-            }]
-        },
-        options: {
-            indexAxis: 'y', // Barras horizontais
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { 
-                    ticks: { color: '#94a3b8', callback: (val) => 'R$ ' + val },
-                    grid: { color: 'rgba(255,255,255,0.05)' }
-                },
-                y: { 
-                    ticks: { color: '#f1f5f9' },
-                    grid: { display: false }
-                }
-            }
-        }
+        data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias), backgroundColor: '#0ea5e9', borderRadius: 4 }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks:{color:'#94a3b8'} }, y: { ticks:{color:'#f1f5f9'}, grid:{display:false} } } }
     });
 }
 
-// ======================================================
-// 7. INICIALIZAÇÃO DE EVENTOS
-// ======================================================
+// Eventos Iniciais
 btnAdicionar.addEventListener('click', adicionar);
 filtroMes.addEventListener('change', carregarDados);

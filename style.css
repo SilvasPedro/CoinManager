@@ -204,3 +204,50 @@ button#btnAdicionar:hover { background: var(--primary-dark); transform: translat
     .canvas-wrapper { height: 250px; }
     .saldo-valor { font-size: 2.5rem; }
 }
+/* ... Resto do seu CSS ... */
+
+/* =========================================
+   8. MODAL DE EDIÇÃO
+   ========================================= */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.8); /* Fundo escuro transparente */
+    backdrop-filter: blur(5px); /* Desfoque no fundo */
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+}
+
+.modal-card {
+    width: 90%; max-width: 500px;
+    border: 1px solid var(--primary); /* Borda verde destaque */
+    animation: slideUp 0.3s ease;
+}
+
+.modal-actions {
+    display: flex; gap: 15px; margin-top: 20px;
+}
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+/* Botões do Modal */
+.btn-primary {
+    background: var(--primary); color: white; border: none; padding: 12px;
+    border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1;
+}
+.btn-primary:hover { background: var(--primary-dark); }
+
+.btn-secondary {
+    background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted);
+    padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.05); color: white; }
+
+/* Botão de Editar na Tabela */
+.btn-editar:hover {
+    background: rgba(250, 204, 21, 0.2); color: #facc15; /* Amarelo */
+}
+
+@keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
