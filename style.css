@@ -126,8 +126,9 @@ h3 {
 
 .grid-3 {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    /* Aumentei o minmax para 250px e mudei para auto-fit para melhor adaptação */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
 }
 
 input, select {
