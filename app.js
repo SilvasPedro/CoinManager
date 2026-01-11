@@ -239,21 +239,79 @@ function atualizarDashboard(entrada, saida, categorias) {
     atualizarGraficos(entrada, saida, categorias);
 }
 
+// --- ATUALIZA GRÁFICOS (CHART.JS) ---
 function atualizarGraficos(entrada, saida, categorias) {
+    // 1. Gráfico Rosca (Entrada vs Saída) - Mantém igual
     const ctxRosca = document.getElementById('graficoRosca').getContext('2d');
     if (chartRosca) chartRosca.destroy();
+
     chartRosca = new Chart(ctxRosca, {
         type: 'doughnut',
-        data: { labels: ['Renda', 'Despesas'], datasets: [{ data: [entrada, saida], backgroundColor: ['#34d399', '#f87171'], borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels:{color:'#94a3b8'} } }, cutout: '70%' }
+        data: {
+            labels: ['Renda', 'Despesas'],
+            datasets: [{
+                data: [entrada, saida],
+                backgroundColor: ['#34d399', '#f87171'], 
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { color: '#94a3b8' } }
+            },
+            layout: { padding: 10 },
+            cutout: '70%' 
+        }
     });
 
+    // 2. Gráfico Barras (CORREÇÃO DE CORES AQUI)
     const ctxBarras = document.getElementById('graficoBarras').getContext('2d');
     if (chartBarras) chartBarras.destroy();
+
+    // Definimos uma paleta de cores variada que combina com o tema dark
+    const cores = [
+        '#0d9488', // Teal
+        '#0ea5e9', // Sky Blue
+        '#6366f1', // Indigo
+        '#8b5cf6', // Violet
+        '#d946ef', // Fuchsia
+        '#f43f5e', // Rose
+        '#f59e0b', // Amber
+        '#84cc16', // Lime
+        '#14b8a6'  // Teal claro
+    ];
+
     chartBarras = new Chart(ctxBarras, {
         type: 'bar',
-        data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias), backgroundColor: '#0ea5e9', borderRadius: 4 }] },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks:{color:'#94a3b8'} }, y: { ticks:{color:'#f1f5f9'}, grid:{display:false} } } }
+        data: {
+            labels: Object.keys(categorias),
+            datasets: [{
+                label: 'Gastos',
+                data: Object.values(categorias),
+                backgroundColor: cores, // <--- Aqui passamos a lista de cores
+                borderRadius: 4,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            indexAxis: 'y', 
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { 
+                    ticks: { color: '#94a3b8', callback: (val) => 'R$ ' + val },
+                    grid: { color: 'rgba(255,255,255,0.05)' }
+                },
+                y: { 
+                    ticks: { color: '#f1f5f9' },
+                    grid: { display: false }
+                }
+            }
+        }
     });
 }
 
