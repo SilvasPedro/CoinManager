@@ -140,9 +140,149 @@ button#btnAdicionar:hover { background: var(--primary-dark); transform: translat
 .btn-google { width: 100%; padding: 12px; background: white; color: #333; font-weight: bold; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
 .btn-google img { width: 20px; }
 
+/* DICA DE SALDO (NOVO) */
+.reserva-dica {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1); /* Linha separadora fina */
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Deixa o valor numérico em destaque (branco) */
+.reserva-dica strong {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
 /* RESPONSIVO */
 @media (max-width: 900px) {
     .dashboard-cards, .graficos-grid, .content-grid { grid-template-columns: 1fr; }
     .user-header { justify-content: space-between; width: 100%; }
     .container { padding: 15px; }
+}
+
+/* =========================================
+   AJUSTES DO FORMULÁRIO E REPETIÇÃO
+   ========================================= */
+
+/* 1. Alinhamento Perfeito do Título com Ícone */
+.card.formulario h3 {
+    display: flex;
+    align-items: center; /* Centraliza verticalmente */
+    gap: 12px; /* Espaço entre o ícone e o texto */
+    margin-bottom: 24px;
+    line-height: 1; /* Remove altura de linha excessiva que desalinhava */
+}
+
+/* 2. Área de Opções Avançadas (Container) */
+.opcoes-avancadas {
+    background: transparent; /* Removemos o fundo geral para focar nos inputs */
+    padding: 0;
+    border: none;
+    margin-bottom: 24px;
+}
+
+/* 3. Checkbox Profissional (Estilo "Botão Selecionável") */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    
+    /* Estilo de Card Clicável */
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 14px 18px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+/* Efeito Hover no Checkbox */
+.checkbox-label:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--text-muted);
+    color: var(--text-main);
+}
+
+/* Quando marcado (Feedback visual) */
+.checkbox-label:has(input:checked) {
+    background: rgba(0, 220, 130, 0.1); /* Fundo verde bem sutil */
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Estilização do quadradinho do input nativo */
+.checkbox-label input[type="checkbox"] {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--text-muted);
+    border-radius: 6px;
+    display: grid;
+    place-content: center;
+    transition: 0.2s;
+    margin: 0; /* Remove margens padrão */
+}
+
+/* O "check" dentro do quadrado */
+.checkbox-label input[type="checkbox"]::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    transform: scale(0);
+    box-shadow: inset 1em 1em var(--bg-body); /* Cor do check */
+    background-color: transparent;
+    transform-origin: center;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    transition: 120ms transform ease-in-out;
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.checkbox-label input[type="checkbox"]:checked::before {
+    transform: scale(1);
+}
+
+/* 4. Caixa de Repetição (Campos que aparecem) */
+#boxRepeticao {
+    margin-top: 12px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.2); /* Fundo mais escuro para destacar que é uma sub-seção */
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    
+    /* CORREÇÃO DO TEXTO CORTADO: */
+    display: grid;
+    /* Se tiver espaço, divide. Se apertar, joga pra baixo automaticamente */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 12px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Garante que os inputs dentro da repetição sigam o padrão */
+#boxRepeticao select,
+#boxRepeticao input {
+    background: var(--bg-body); /* Contraste com o fundo do boxRepeticao */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%; /* Garante que preencha a célula do grid */
+}
+
+p {
+    margin-right: 10px;
 }

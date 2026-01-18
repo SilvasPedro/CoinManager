@@ -202,59 +202,50 @@ function carregarDados() {
     });
 }
 
+// Localize a função atualizarDashboard e substitua por esta versão:
+
 function atualizarDashboard(entrada, saida, categorias) {
+    // 1. Elementos (Se preferir, declare lá no topo, mas funciona aqui também)
+    const dicaEl = document.getElementById('dicaRestante');
+
     const saldo = entrada - saida;
     saldoEl.innerText = `R$ ${saldo.toFixed(2)}`;
     
-    // Calcula Reserva Baseada na Meta do Usuário
+    // 2. Calcula a Reserva
     const pct = porcentagemReserva / 100;
     const reservaMeta = saldo > 0 ? saldo * pct : 0;
     reservaEl.innerText = `R$ ${reservaMeta.toFixed(2)}`;
     
-    // --- LÓGICA PROFISSIONAL DE SAÚDE FINANCEIRA ---
-    let htmlStatus = '';
+    // 3. NOVO: Calcula o Saldo "Livre" (Pós-Investimento)
+    const saldoLivre = saldo - reservaMeta;
+
+    if (saldo > 0) {
+        // Mostra quanto sobra se a pessoa investir
+        dicaEl.innerHTML = `Sobrará <strong>R$ ${saldoLivre.toFixed(2)}</strong> livre.`;
+        dicaEl.style.color = 'var(--text-muted)'; // Cor normal
+    } else {
+        // Se estiver negativo ou zerado, esconde ou mostra aviso
+        dicaEl.innerHTML = "Sem saldo para investir.";
+        dicaEl.style.color = 'var(--danger)'; // Cor vermelha sutil
+    }
     
+    // 4. Lógica de Status (Mantida)
+    let htmlStatus = '';
     if (entrada === 0) {
         htmlStatus = '<span style="color: var(--text-muted)">Aguardando renda...</span>';
     } else {
-        // Calcula a Taxa de Poupança Real (Quanto sobrou em %)
         const taxaPoupanca = (saldo / entrada) * 100;
 
         if (saldo < 0) {
-            // Cenário de Dívida
-            htmlStatus = `
-                <span style="color: var(--danger); display: flex; align-items: center; gap: 5px;">
-                    <span class="material-icons-round" style="font-size: 1.2rem">trending_down</span>
-                    Endividado (${taxaPoupanca.toFixed(1)}%)
-                </span>`;
+            htmlStatus = `<span style="color: var(--danger); font-weight:bold">Endividado (${taxaPoupanca.toFixed(1)}%)</span>`;
         } else if (taxaPoupanca < 5) {
-            // Menos de 5% de sobra
-            htmlStatus = `
-                <span style="color: #f87171; display: flex; align-items: center; gap: 5px;">
-                    <span class="material-icons-round" style="font-size: 1.2rem">battery_alert</span>
-                    No Limite (${taxaPoupanca.toFixed(1)}%)
-                </span>`;
+            htmlStatus = `<span style="color: #f87171">No Limite (${taxaPoupanca.toFixed(1)}%)</span>`;
         } else if (taxaPoupanca < 15) {
-            // Entre 5% e 15%
-            htmlStatus = `
-                <span style="color: #facc15; display: flex; align-items: center; gap: 5px;">
-                    <span class="material-icons-round" style="font-size: 1.2rem">warning</span>
-                    Atenção (${taxaPoupanca.toFixed(1)}%)
-                </span>`;
+            htmlStatus = `<span style="color: #facc15">Atenção (${taxaPoupanca.toFixed(1)}%)</span>`;
         } else if (taxaPoupanca < 30) {
-            // Entre 15% e 30% (Saudável)
-            htmlStatus = `
-                <span style="color: #34d399; display: flex; align-items: center; gap: 5px;">
-                    <span class="material-icons-round" style="font-size: 1.2rem">thumb_up</span>
-                    Saudável (${taxaPoupanca.toFixed(1)}%)
-                </span>`;
+            htmlStatus = `<span style="color: #34d399">Saudável (${taxaPoupanca.toFixed(1)}%)</span>`;
         } else {
-            // Mais de 30% (Investidor)
-            htmlStatus = `
-                <span style="color: #14b8a6; font-weight: 800; display: flex; align-items: center; gap: 5px;">
-                    <span class="material-icons-round" style="font-size: 1.2rem">rocket_launch</span>
-                    Investidor (${taxaPoupanca.toFixed(1)}%)
-                </span>`;
+            htmlStatus = `<span style="color: #14b8a6; font-weight:bold">Investidor (${taxaPoupanca.toFixed(1)}%)</span>`;
         }
     }
 

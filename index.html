@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoinManager Pro</title>
+    <title>Planejador Financeiro</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="src/favicon.png" type="image/x-icon">
 </head>
+
 <body>
 
     <div id="login-overlay" class="login-screen">
         <div class="login-card">
-            <h1>CoinManager 🪙</h1>
+            <h1>💎 Planejador Financeiro</h1>
             <p>Seu planejador financeiro inteligente.</p>
             <button id="btnLogin" class="btn-google">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
@@ -23,7 +26,7 @@
     </div>
 
     <div id="app-container" class="container" style="display: none;">
-        
+
         <div class="user-header">
             <div class="user-settings">
                 <label for="inputPorcentagem">Meta de Reserva:</label>
@@ -60,15 +63,19 @@
                     <h3>Reserva Automática</h3>
                 </div>
                 <div class="reserva-valor" id="displayReserva">R$ 0,00</div>
-                <p class="reserva-info">Valor calculado baseado na meta.</p>
+                <p class="reserva-info">Meta de economia mensal.</p>
+
+                <div class="reserva-dica" id="dicaRestante">
+                    Sobrará R$ 0,00 livre.
+                </div>
             </div>
 
             <div class="card info-card">
-                 <div class="card-icon-header">
+                <div class="card-icon-header">
                     <span class="material-icons-round" style="color: #64748b">insights</span>
                     <h3>Saúde Financeira</h3>
                 </div>
-                 <div id="statusFinanceiro" class="status-box">Calculando...</div>
+                <div id="statusFinanceiro" class="status-box">Calculando...</div>
             </div>
         </header>
 
@@ -86,14 +93,14 @@
         <div class="content-grid">
             <section class="card formulario">
                 <h3><span class="material-icons-round">add_circle</span> Novo Lançamento</h3>
-                
+
                 <div class="input-group">
                     <input type="text" id="desc" placeholder="Descrição (Ex: Salário, Netflix)">
                 </div>
 
                 <div class="input-group grid-3">
                     <input type="number" id="valor" placeholder="Valor" step="0.01">
-                    
+
                     <select id="categoria">
                         <option value="Moradia">🏠 Moradia</option>
                         <option value="Alimentação">🍔 Alimentação</option>
@@ -104,6 +111,7 @@
                         <option value="Contas">💡 Contas</option>
                         <option value="Salário">💰 Salário</option>
                         <option value="Investimento">📈 Investimento</option>
+                        <option value="Assinatura">🔁 Assinatura</option>
                         <option value="Outros">📦 Outros</option>
                     </select>
 
@@ -127,7 +135,7 @@
                         <input type="number" id="qtdeMeses" placeholder="Nº Meses" min="2" max="60">
                     </div>
                 </div>
-                
+
                 <button id="btnAdicionar">Salvar Lançamento</button>
             </section>
 
@@ -185,4 +193,5 @@
 
     <script type="module" src="app.js"></script>
 </body>
+
 </html>
