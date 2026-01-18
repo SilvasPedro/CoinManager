@@ -1,254 +1,148 @@
-/* =========================================
-   1. VARIÁVEIS & TEMA
-   ========================================= */
 :root {
     --bg-body: #0f172a;
     --bg-card: #1e293b;
     --bg-input: #020617;
-    --primary: #0d9488;
-    --primary-dark: #115e59;
-    --primary-glow: rgba(13, 148, 136, 0.25);
-    --gradient-hero: linear-gradient(135deg, #115e59 0%, #0f766e 100%);
-    --text-main: #f1f5f9;
+    --primary: #14b8a6; /* Teal mais vibrante */
+    --primary-dark: #0f766e;
+    --text-main: #f8fafc;
     --text-muted: #94a3b8;
-    --color-success: #34d399;
-    --color-danger: #f87171;
-    --border-subtle: 1px solid rgba(255, 255, 255, 0.08);
+    --success: #34d399;
+    --danger: #f87171;
+    --border: 1px solid rgba(255, 255, 255, 0.08);
     --radius: 16px;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
-/* Reset */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+body { background: var(--bg-body); color: var(--text-main); min-height: 100vh; padding-bottom: 50px; }
 
-body {
-    background-color: var(--bg-body);
-    color: var(--text-main);
-    min-height: 100vh;
-    overflow-x: hidden;
-    padding-bottom: 50px;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--bg-body); }
-::-webkit-scrollbar-thumb { background: var(--bg-card); border-radius: 4px; }
-
-/* =========================================
-   2. LAYOUT E ESTRUTURA
-   ========================================= */
+/* LAYOUT */
 .container {
     width: 100%;
-    max-width: 1400px;
+    max-width: 1300px;
     margin: 0 auto;
-    padding: 40px 4%;
-    display: block; 
+    
+    /* Aumentei o padding do topo para 40px */
+    padding: 40px 4%; 
+    
+    display: flex;
+    flex-direction: column;
+    
+    /* Aumentei o gap (espaço entre itens) para 40px */
+    gap: 40px; 
 }
 
-/* Espaçamento físico entre seções */
-.dashboard-cards, 
-.graficos-grid, 
-.content-grid {
-    margin-bottom: 40px;
-    width: 100%;
+/* HEADER DO USUÁRIO & CONFIGURAÇÃO */
+.user-header {
+    display: flex; 
+    justify-content: flex-end; 
+    align-items: center; 
+    gap: 15px;
+    background: var(--bg-card); 
+    padding: 10px 20px; 
+    border-radius: 50px;
+    border: var(--border); 
+    align-self: flex-end; 
+    box-shadow: var(--shadow);
+    
+    /* ADICIONE ESTA LINHA: Garante empurrão para baixo extra */
+    margin-bottom: 20px; 
 }
 
-/* Estilo do Card */
-.card {
-    background-color: var(--bg-card);
-    border: var(--border-subtle);
-    border-radius: var(--radius);
-    padding: 24px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    height: 100%;
+.user-settings { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-muted); }
+.input-wrapper-header {
+    background: var(--bg-input); border: var(--border); padding: 4px 10px; border-radius: 20px;
+    display: flex; align-items: center; gap: 4px;
 }
-
-h3 {
-    font-size: 0.9rem; color: var(--text-muted); font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px;
-    display: flex; align-items: center; gap: 8px;
+.input-wrapper-header input { 
+    width: 35px; background: none; border: none; color: var(--primary); font-weight: bold; text-align: right; font-size: 1rem; padding: 0;
 }
-.material-icons-round { font-size: 1.2rem; }
+.divider-vertical { width: 1px; height: 20px; background: rgba(255,255,255,0.1); margin: 0 5px; }
+.user-info { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.9rem; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--primary); }
+.btn-logout { background: none; border: none; color: var(--danger); cursor: pointer; display: flex; align-items: center; opacity: 0.8; }
+.btn-logout:hover { opacity: 1; transform: scale(1.1); }
 
-/* =========================================
-   3. DASHBOARD (TOPO)
-   ========================================= */
+/* DASHBOARD CARDS */
 .dashboard-cards {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr;
-    gap: 24px;
+    display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 24px;
+    margin-bottom: 10px;
+}
+.card {
+    background: var(--bg-card); border: var(--border); border-radius: var(--radius);
+    padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: center;
 }
 
 /* Card Saldo */
 .highlight-card {
-    background: var(--gradient-hero); border: none; position: relative; overflow: hidden;
-    display: flex; flex-direction: column; justify-content: center; min-height: 160px;
+    background: linear-gradient(135deg, #115e59 0%, #042f2e 100%);
+    border: none; position: relative; overflow: hidden; min-height: 150px;
 }
-.highlight-card::before {
-    content: ''; position: absolute; top: -50%; right: -50%; width: 300px; height: 300px;
-    background: rgba(255,255,255,0.1); border-radius: 50%; filter: blur(60px);
-}
-.header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; position: relative; z-index: 2; }
-.header-top p, .label-saldo { font-size: 0.85rem; color: rgba(255,255,255,0.8); }
-
-.input-mes-dark {
-    background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2); color: #fff;
-    padding: 5px 10px; border-radius: 8px; outline: none; cursor: pointer;
-}
+.header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; z-index: 2; position: relative;}
+.input-mes-dark { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 5px 10px; border-radius: 8px; cursor: pointer; outline: none; }
 .input-mes-dark::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-.saldo-valor { font-size: 2.8rem; font-weight: 800; color: #fff; position: relative; z-index: 2; }
+.saldo-valor { font-size: 2.5rem; font-weight: 800; color: white; z-index: 2; position: relative; }
+.label-saldo { font-size: 0.85rem; color: rgba(255,255,255,0.7); }
 
-/* Outros Cards */
-.reserva-valor { font-size: 1.8rem; font-weight: 700; color: var(--color-success); margin-bottom: 5px; }
-.reserva-info, .dica-texto { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+/* Info Cards */
+.card-icon-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.card-icon-header h3 { margin: 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+.reserva-valor { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+.reserva-info { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+.status-box { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 5px; }
 
-/* =========================================
-   4. GRÁFICOS
-   ========================================= */
-.graficos-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
+/* GRÁFICOS */
+.graficos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px; }
+.grafico-card h3 { margin-bottom: 15px; font-size: 0.9rem; color: var(--text-muted); }
+.canvas-wrapper { position: relative; height: 250px; width: 100%; }
+
+/* FORM E TABELA */
+.content-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 24px; align-items: start; }
+
+/* Inputs Form */
+.input-group { margin-bottom: 15px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
+input:not([type="checkbox"]), select {
+    width: 100%; background: var(--bg-input); border: var(--border); color: var(--text-main);
+    padding: 12px; border-radius: 10px; outline: none; transition: 0.2s;
 }
-.canvas-wrapper { position: relative; height: 300px; width: 100%; }
-
-/* =========================================
-   5. ÁREA DE CONTEÚDO
-   ========================================= */
-.content-grid {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 24px;
-    align-items: start;
-}
-
-/* --- FORMULÁRIO --- */
-.input-group { margin-bottom: 16px; }
-
-.grid-3 {
-    display: grid;
-    /* Aumentei o minmax para 250px e mudei para auto-fit para melhor adaptação */
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 16px;
-}
-
-input, select {
-    width: 100%; background: var(--bg-input); border: var(--border-subtle); color: var(--text-main);
-    padding: 12px 14px; border-radius: 10px; font-size: 0.9rem; outline: none;
-}
-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3csvg%3e");
-    background-position: right 1rem center; background-repeat: no-repeat; background-size: 1.2em; padding-right: 2.5rem;
-}
-input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-glow); }
-
+input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2); }
 button#btnAdicionar {
-    width: 100%; padding: 14px; background: var(--primary); color: white;
-    font-weight: 700; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s;
+    width: 100%; padding: 14px; background: var(--primary); color: white; border: none;
+    border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s;
 }
 button#btnAdicionar:hover { background: var(--primary-dark); transform: translateY(-2px); }
 
-/* --- TABELA --- */
+/* Opções Avançadas */
+.opcoes-avancadas { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--border); }
+.checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; color: var(--text-muted); }
+#boxRepeticao { margin-top: 10px; display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+
+/* Tabela */
 .tabela-container { overflow-x: auto; }
-.tabela-financas { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-.tabela-financas th { text-align: left; padding: 0 15px 10px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; }
-.tabela-financas td { background: rgba(255,255,255,0.03); padding: 14px 15px; vertical-align: middle; }
+.tabela-financas { width: 100%; border-collapse: separate; border-spacing: 0 6px; }
+.tabela-financas th { text-align: left; padding: 10px 15px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; }
+.tabela-financas td { background: rgba(255,255,255,0.03); padding: 12px 15px; vertical-align: middle; }
 .tabela-financas tr td:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
 .tabela-financas tr td:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; text-align: right; }
+.tag-categoria { padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 20px; font-size: 0.75rem; color: var(--text-muted); }
+.entrada { color: var(--success); font-weight: 600; }
+.saida { color: var(--danger); font-weight: 600; }
+.btn-acao { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 5px; transition: 0.2s; }
+.btn-acao:hover { color: white; transform: scale(1.1); }
 
-.tag-categoria { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; background: rgba(148,163,184,0.15); color: var(--text-muted); border: var(--border-subtle); }
-.entrada { color: var(--color-success); font-weight: 700; } .saida { color: var(--color-danger); font-weight: 700; }
-.btn-acao { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 5px; border-radius: 50%; }
-.btn-deletar:hover { background: rgba(248,113,113,0.2); color: var(--color-danger); }
+/* MODAL & LOGIN */
+.modal-overlay, .login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+.modal-card, .login-card { background: var(--bg-card); padding: 30px; border-radius: 20px; border: var(--border); width: 90%; max-width: 450px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.btn-primary { flex: 1; background: var(--primary); padding: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
+.btn-secondary { flex: 1; background: transparent; border: 1px solid var(--text-muted); padding: 10px; border-radius: 8px; color: var(--text-muted); cursor: pointer; }
+.btn-google { width: 100%; padding: 12px; background: white; color: #333; font-weight: bold; border: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+.btn-google img { width: 20px; }
 
-/* =========================================
-   6. LOGIN & RESPONSIVIDADE (AJUSTE AQUI)
-   ========================================= */
-.login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); display: flex; justify-content: center; align-items: center; z-index: 99; }
-.login-card { background: var(--bg-card); padding: 40px; border-radius: 24px; text-align: center; border: var(--border-subtle); max-width: 400px; width: 90%; }
-
-/* AJUSTE NO BOTÃO GOOGLE */
-.btn-google {
-    background: white;
-    color: #333;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px; /* Espaço um pouco maior entre ícone e texto */
-    width: 100%;
-    padding: 12px; /* Reduzido de 14px para ficar mais elegante */
-    border-radius: 12px;
-    border: none;
-    font-weight: 600;
-    font-size: 0.95rem; /* Fonte ligeiramente menor */
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-.btn-google:hover { transform: scale(1.02); background: #f8f9fa; }
-.btn-google img {
-    width: 20px; /* Ícone reduzido para ficar proporcional ao texto */
-    height: 20px;
-}
-
-/* Header do Usuário */
-.user-header { display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-bottom: 20px; }
-.user-info { display: flex; align-items: center; gap: 10px; background: var(--bg-card); padding: 5px 12px 5px 5px; border-radius: 50px; border: var(--border-subtle); }
-.avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--primary); }
-#userName { font-size: 0.85rem; font-weight: 700; }
-.btn-logout { background: transparent; border: 1px solid var(--text-danger); color: var(--text-danger); padding: 5px 12px; border-radius: 50px; cursor: pointer; font-size: 0.8rem; }
-
-/* MOBILE */
-@media (max-width: 1024px) {
-    .container { padding: 20px 4%; }
-    .dashboard-cards, .graficos-grid, .content-grid { display: flex; flex-direction: column; gap: 20px; }
-    .grid-3 { grid-template-columns: 1fr; }
-    .canvas-wrapper { height: 250px; }
-    .saldo-valor { font-size: 2.5rem; }
-}
-/* ... Resto do seu CSS ... */
-
-/* =========================================
-   8. MODAL DE EDIÇÃO
-   ========================================= */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(15, 23, 42, 0.8); /* Fundo escuro transparente */
-    backdrop-filter: blur(5px); /* Desfoque no fundo */
-    display: flex; justify-content: center; align-items: center;
-    z-index: 1000;
-}
-
-.modal-card {
-    width: 90%; max-width: 500px;
-    border: 1px solid var(--primary); /* Borda verde destaque */
-    animation: slideUp 0.3s ease;
-}
-
-.modal-actions {
-    display: flex; gap: 15px; margin-top: 20px;
-}
-
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
-/* Botões do Modal */
-.btn-primary {
-    background: var(--primary); color: white; border: none; padding: 12px;
-    border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1;
-}
-.btn-primary:hover { background: var(--primary-dark); }
-
-.btn-secondary {
-    background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted);
-    padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1;
-}
-.btn-secondary:hover { background: rgba(255,255,255,0.05); color: white; }
-
-/* Botão de Editar na Tabela */
-.btn-editar:hover {
-    background: rgba(250, 204, 21, 0.2); color: #facc15; /* Amarelo */
-}
-
-@keyframes slideUp {
-    from { transform: translateY(50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+/* RESPONSIVO */
+@media (max-width: 900px) {
+    .dashboard-cards, .graficos-grid, .content-grid { grid-template-columns: 1fr; }
+    .user-header { justify-content: space-between; width: 100%; }
+    .container { padding: 15px; }
 }

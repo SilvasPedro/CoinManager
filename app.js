@@ -1,4 +1,3 @@
-// 1. IMPORTAÇÕES (Adicionei updateDoc)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { 
     getFirestore, collection, addDoc, onSnapshot, 
@@ -9,7 +8,7 @@ import {
     signOut, onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-// 2. CONFIGURAÇÃO (SUAS CHAVES)
+// SUAS CHAVES (MANTENHA AS SUAS!)
 const firebaseConfig = {
     apiKey: "AIzaSyC_4uHxa8NsmExmbZ602r8IsUZg6yvbO7o", 
     authDomain: "coinmanager-7e0bd.firebaseapp.com",
@@ -24,8 +23,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// 3. ELEMENTOS DOM
-// Login
+// Elementos
 const loginScreen = document.getElementById('login-overlay');
 const appContainer = document.getElementById('app-container');
 const btnLogin = document.getElementById('btnLogin');
@@ -33,7 +31,6 @@ const btnLogout = document.getElementById('btnLogout');
 const userPhoto = document.getElementById('userPhoto');
 const userName = document.getElementById('userName');
 
-// App Principal
 const filtroMes = document.getElementById('filtroMes');
 const btnAdicionar = document.getElementById('btnAdicionar');
 const tabelaEl = document.getElementById('listaTransacoes');
@@ -41,27 +38,50 @@ const saldoEl = document.getElementById('displaySaldo');
 const reservaEl = document.getElementById('displayReserva');
 const statusEl = document.getElementById('statusFinanceiro');
 
-// Modal de Edição
+// Novos Elementos
+const inputPorcentagem = document.getElementById('inputPorcentagem');
+const checkRepetir = document.getElementById('checkRepetir');
+const boxRepeticao = document.getElementById('boxRepeticao');
+const modoRepeticao = document.getElementById('modoRepeticao');
+const qtdeMesesInput = document.getElementById('qtdeMeses');
+
+// Modal
 const modalEditar = document.getElementById('modal-editar');
 const btnCancelarEdit = document.getElementById('btnCancelarEdit');
 const btnSalvarEdit = document.getElementById('btnSalvarEdit');
-// Inputs do Modal
 const editDesc = document.getElementById('edit-desc');
 const editValor = document.getElementById('edit-valor');
 const editCategoria = document.getElementById('edit-categoria');
 const editTipo = document.getElementById('edit-tipo');
 
-// Variáveis Globais
+// Variáveis
 let chartRosca = null;
 let chartBarras = null;
 let unsubscribe = null;
 let usuarioAtual = null;
-let idEmEdicao = null; // Guarda qual ID estamos editando no momento
+let idEmEdicao = null;
 
 filtroMes.value = new Date().toISOString().slice(0, 7);
+let porcentagemReserva = localStorage.getItem('user_reserva_pct') || 20;
+inputPorcentagem.value = porcentagemReserva;
 
 // ======================================================
-// LOGIN / LOGOUT
+// INTERAÇÕES
+// ======================================================
+checkRepetir.addEventListener('change', (e) => {
+    boxRepeticao.style.display = e.target.checked ? 'grid' : 'none';
+});
+
+inputPorcentagem.addEventListener('change', (e) => {
+    let valor = parseInt(e.target.value);
+    if(valor < 0) valor = 0; if(valor > 100) valor = 100;
+    porcentagemReserva = valor;
+    localStorage.setItem('user_reserva_pct', valor);
+    carregarDados(); 
+});
+
+// ======================================================
+// LOGIN
 // ======================================================
 btnLogin.addEventListener('click', () => signInWithPopup(auth, provider));
 btnLogout.addEventListener('click', () => signOut(auth).then(() => window.location.reload()));
@@ -84,28 +104,55 @@ onAuthStateChanged(auth, (user) => {
 // ======================================================
 // FUNÇÕES PRINCIPAIS
 // ======================================================
-
 async function adicionar() {
     if (!usuarioAtual) return;
     const desc = document.getElementById('desc').value;
-    const valor = parseFloat(document.getElementById('valor').value);
+    const valorOriginal = parseFloat(document.getElementById('valor').value);
     const categoria = document.getElementById('categoria').value;
     const tipo = document.getElementById('tipo').value;
-    const mesReferencia = filtroMes.value;
+    const isRepetir = checkRepetir.checked;
+    const modo = modoRepeticao.value;
+    const qtdeMeses = parseInt(qtdeMesesInput.value) || 1;
+    const mesBase = filtroMes.value; 
 
-    if (!desc || isNaN(valor)) return alert("Preencha tudo!");
+    if (!desc || isNaN(valorOriginal)) return alert("Preencha descrição e valor!");
 
-    btnAdicionar.innerText = "Salvando...";
+    btnAdicionar.innerText = isRepetir ? "Processando..." : "Salvando...";
+    btnAdicionar.disabled = true;
+
     try {
-        await addDoc(collection(db, "financas"), {
-            uid: usuarioAtual.uid,
-            descricao: desc, valor: valor, tipo: tipo, categoria: categoria,
-            referencia: mesReferencia, criadoEm: Date.now()
-        });
+        let loop = isRepetir ? qtdeMeses : 1;
+        let valorFinal = valorOriginal;
+        let descFinal = desc;
+
+        if(isRepetir && modo === 'parcelado') valorFinal = valorOriginal / loop;
+
+        const promessas = [];
+        let [anoBase, mesNumBase] = mesBase.split('-').map(Number);
+
+        for (let i = 0; i < loop; i++) {
+            let dataFutura = new Date(anoBase, (mesNumBase - 1) + i, 1);
+            let anoFuturo = dataFutura.getFullYear();
+            let mesFuturo = (dataFutura.getMonth() + 1).toString().padStart(2, '0');
+            
+            if(isRepetir && modo === 'parcelado') descFinal = `${desc} (${i+1}/${loop})`;
+
+            promessas.push(addDoc(collection(db, "financas"), {
+                uid: usuarioAtual.uid, descricao: descFinal, valor: valorFinal, tipo: tipo,
+                categoria: categoria, referencia: `${anoFuturo}-${mesFuturo}`, criadoEm: Date.now() + i
+            }));
+        }
+
+        await Promise.all(promessas);
+        
         document.getElementById('desc').value = "";
         document.getElementById('valor').value = "";
-    } catch (e) { console.error(e); } 
-    finally { btnAdicionar.innerText = "Salvar Lançamento"; }
+        checkRepetir.checked = false;
+        boxRepeticao.style.display = 'none';
+        alert("Salvo com sucesso!");
+
+    } catch (e) { console.error(e); alert("Erro ao salvar."); } 
+    finally { btnAdicionar.disabled = false; btnAdicionar.innerText = "Salvar Lançamento"; }
 }
 
 function carregarDados() {
@@ -124,7 +171,7 @@ function carregarDados() {
         listaDocs.sort((a, b) => b.criadoEm - a.criadoEm);
 
         if (listaDocs.length === 0) {
-            tabelaEl.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#666;">Nada aqui.</td></tr>';
+            tabelaEl.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#666;">Sem dados.</td></tr>';
             atualizarDashboard(0, 0, {}); return;
         }
 
@@ -136,7 +183,6 @@ function carregarDados() {
                 if (dados.categoria !== 'Salário') gastosPorCategoria[dados.categoria] = (gastosPorCategoria[dados.categoria] || 0) + valor;
             }
 
-            // Cria linha com botões de Ação
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><span class="tag-categoria">${dados.categoria}</span></td>
@@ -144,13 +190,9 @@ function carregarDados() {
                 <td class="${dados.tipo === 'entrada' ? 'entrada' : 'saida'}">
                     ${dados.tipo === 'entrada' ? '+' : '-'} R$ ${valor.toFixed(2)}
                 </td>
-                <td style="white-space: nowrap;">
-                    <button class="btn-acao btn-editar" onclick="abrirModalEdicao('${dados.id}', '${dados.descricao}', ${valor}, '${dados.categoria}', '${dados.tipo}')">
-                        <span class="material-icons-round">edit</span>
-                    </button>
-                    <button class="btn-acao btn-deletar" onclick="deletarItem('${dados.id}')">
-                        <span class="material-icons-round">delete</span>
-                    </button>
+                <td style="white-space:nowrap">
+                    <button class="btn-acao" onclick="abrirModalEdicao('${dados.id}', '${dados.descricao}', ${valor}, '${dados.categoria}', '${dados.tipo}')"><span class="material-icons-round">edit</span></button>
+                    <button class="btn-acao" onclick="deletarItem('${dados.id}')"><span class="material-icons-round">delete</span></button>
                 </td>
             `;
             tabelaEl.appendChild(tr);
@@ -160,161 +202,97 @@ function carregarDados() {
     });
 }
 
-// ======================================================
-// LÓGICA DE EDIÇÃO (NOVO!)
-// ======================================================
-
-// 1. Abre o Modal preenchido
-window.abrirModalEdicao = function(id, desc, valor, categoria, tipo) {
-    idEmEdicao = id; // Salva o ID globalmente para saber qual atualizar depois
-    
-    // Preenche os campos do modal
-    editDesc.value = desc;
-    editValor.value = valor;
-    editCategoria.value = categoria;
-    editTipo.value = tipo;
-
-    // Mostra o modal
-    modalEditar.style.display = 'flex';
-}
-
-// 2. Fecha o Modal
-btnCancelarEdit.addEventListener('click', () => {
-    modalEditar.style.display = 'none';
-    idEmEdicao = null;
-});
-
-// 3. Salva no Firebase
-btnSalvarEdit.addEventListener('click', async () => {
-    if(!idEmEdicao) return;
-    
-    const novaDesc = editDesc.value;
-    const novoValor = parseFloat(editValor.value);
-    const novaCat = editCategoria.value;
-    const novoTipo = editTipo.value;
-
-    if(!novaDesc || isNaN(novoValor)) return alert("Preencha corretamente.");
-
-    btnSalvarEdit.innerText = "Salvando...";
-
-    try {
-        // ATUALIZA NO FIRESTORE
-        const docRef = doc(db, "financas", idEmEdicao);
-        await updateDoc(docRef, {
-            descricao: novaDesc,
-            valor: novoValor,
-            categoria: novaCat,
-            tipo: novoTipo
-        });
-        
-        modalEditar.style.display = 'none'; // Fecha
-    } catch (error) {
-        console.error("Erro ao editar:", error);
-        alert("Erro ao atualizar.");
-    } finally {
-        btnSalvarEdit.innerText = "Salvar Alterações";
-        idEmEdicao = null;
-    }
-});
-
-
-// ======================================================
-// FUNÇÕES AUXILIARES
-// ======================================================
-window.deletarItem = async function(id) {
-    if (confirm("Apagar item?")) await deleteDoc(doc(db, "financas", id));
-}
-
 function atualizarDashboard(entrada, saida, categorias) {
     const saldo = entrada - saida;
     saldoEl.innerText = `R$ ${saldo.toFixed(2)}`;
-    reservaEl.innerText = `R$ ${(saldo > 0 ? saldo * 0.2 : 0).toFixed(2)}`;
     
-    // Status
-    if(entrada === 0) statusEl.innerHTML = '<span style="color:#888">Sem dados.</span>';
-    else if(saldo < 0) statusEl.innerHTML = '<span style="color:var(--color-danger)">🚨 Crítico</span>';
-    else if((saida/entrada) > 0.9) statusEl.innerHTML = '<span style="color:#facc15">⚠️ Atenção</span>';
-    else statusEl.innerHTML = '<span style="color:var(--color-success)">✅ Excelente</span>';
+    // Calcula Reserva Baseada na Meta do Usuário
+    const pct = porcentagemReserva / 100;
+    const reservaMeta = saldo > 0 ? saldo * pct : 0;
+    reservaEl.innerText = `R$ ${reservaMeta.toFixed(2)}`;
+    
+    // --- LÓGICA PROFISSIONAL DE SAÚDE FINANCEIRA ---
+    let htmlStatus = '';
+    
+    if (entrada === 0) {
+        htmlStatus = '<span style="color: var(--text-muted)">Aguardando renda...</span>';
+    } else {
+        // Calcula a Taxa de Poupança Real (Quanto sobrou em %)
+        const taxaPoupanca = (saldo / entrada) * 100;
 
+        if (saldo < 0) {
+            // Cenário de Dívida
+            htmlStatus = `
+                <span style="color: var(--danger); display: flex; align-items: center; gap: 5px;">
+                    <span class="material-icons-round" style="font-size: 1.2rem">trending_down</span>
+                    Endividado (${taxaPoupanca.toFixed(1)}%)
+                </span>`;
+        } else if (taxaPoupanca < 5) {
+            // Menos de 5% de sobra
+            htmlStatus = `
+                <span style="color: #f87171; display: flex; align-items: center; gap: 5px;">
+                    <span class="material-icons-round" style="font-size: 1.2rem">battery_alert</span>
+                    No Limite (${taxaPoupanca.toFixed(1)}%)
+                </span>`;
+        } else if (taxaPoupanca < 15) {
+            // Entre 5% e 15%
+            htmlStatus = `
+                <span style="color: #facc15; display: flex; align-items: center; gap: 5px;">
+                    <span class="material-icons-round" style="font-size: 1.2rem">warning</span>
+                    Atenção (${taxaPoupanca.toFixed(1)}%)
+                </span>`;
+        } else if (taxaPoupanca < 30) {
+            // Entre 15% e 30% (Saudável)
+            htmlStatus = `
+                <span style="color: #34d399; display: flex; align-items: center; gap: 5px;">
+                    <span class="material-icons-round" style="font-size: 1.2rem">thumb_up</span>
+                    Saudável (${taxaPoupanca.toFixed(1)}%)
+                </span>`;
+        } else {
+            // Mais de 30% (Investidor)
+            htmlStatus = `
+                <span style="color: #14b8a6; font-weight: 800; display: flex; align-items: center; gap: 5px;">
+                    <span class="material-icons-round" style="font-size: 1.2rem">rocket_launch</span>
+                    Investidor (${taxaPoupanca.toFixed(1)}%)
+                </span>`;
+        }
+    }
+
+    statusEl.innerHTML = htmlStatus;
     atualizarGraficos(entrada, saida, categorias);
 }
 
-// --- ATUALIZA GRÁFICOS (CHART.JS) ---
+// Funções Globais e Gráficos
+window.deletarItem = async function(id) { if(confirm("Apagar?")) await deleteDoc(doc(db, "financas", id)); }
+window.abrirModalEdicao = function(id, desc, valor, categoria, tipo) {
+    idEmEdicao = id; editDesc.value = desc; editValor.value = valor; editCategoria.value = categoria; editTipo.value = tipo; modalEditar.style.display = 'flex';
+}
+btnCancelarEdit.addEventListener('click', () => { modalEditar.style.display = 'none'; idEmEdicao = null; });
+btnSalvarEdit.addEventListener('click', async () => {
+    if(!idEmEdicao) return;
+    try {
+        await updateDoc(doc(db, "financas", idEmEdicao), { descricao: editDesc.value, valor: parseFloat(editValor.value), categoria: editCategoria.value, tipo: editTipo.value });
+        modalEditar.style.display = 'none';
+    } catch(e) { console.error(e); } finally { idEmEdicao = null; }
+});
+
 function atualizarGraficos(entrada, saida, categorias) {
-    // 1. Gráfico Rosca (Entrada vs Saída) - Mantém igual
     const ctxRosca = document.getElementById('graficoRosca').getContext('2d');
     if (chartRosca) chartRosca.destroy();
-
     chartRosca = new Chart(ctxRosca, {
         type: 'doughnut',
-        data: {
-            labels: ['Renda', 'Despesas'],
-            datasets: [{
-                data: [entrada, saida],
-                backgroundColor: ['#34d399', '#f87171'], 
-                borderWidth: 0,
-                hoverOffset: 10
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'right', labels: { color: '#94a3b8' } }
-            },
-            layout: { padding: 10 },
-            cutout: '70%' 
-        }
+        data: { labels: ['Renda', 'Despesas'], datasets: [{ data: [entrada, saida], backgroundColor: ['#34d399', '#f87171'], borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels:{color:'#94a3b8'} } }, cutout: '70%' }
     });
 
-    // 2. Gráfico Barras (CORREÇÃO DE CORES AQUI)
     const ctxBarras = document.getElementById('graficoBarras').getContext('2d');
     if (chartBarras) chartBarras.destroy();
-
-    // Definimos uma paleta de cores variada que combina com o tema dark
-    const cores = [
-        '#0d9488', // Teal
-        '#0ea5e9', // Sky Blue
-        '#6366f1', // Indigo
-        '#8b5cf6', // Violet
-        '#d946ef', // Fuchsia
-        '#f43f5e', // Rose
-        '#f59e0b', // Amber
-        '#84cc16', // Lime
-        '#14b8a6'  // Teal claro
-    ];
-
     chartBarras = new Chart(ctxBarras, {
         type: 'bar',
-        data: {
-            labels: Object.keys(categorias),
-            datasets: [{
-                label: 'Gastos',
-                data: Object.values(categorias),
-                backgroundColor: cores, // <--- Aqui passamos a lista de cores
-                borderRadius: 4,
-                borderSkipped: false
-            }]
-        },
-        options: {
-            indexAxis: 'y', 
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { 
-                    ticks: { color: '#94a3b8', callback: (val) => 'R$ ' + val },
-                    grid: { color: 'rgba(255,255,255,0.05)' }
-                },
-                y: { 
-                    ticks: { color: '#f1f5f9' },
-                    grid: { display: false }
-                }
-            }
-        }
+        data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias), backgroundColor: ['#14b8a6', '#0ea5e9', '#6366f1', '#d946ef', '#f43f5e'], borderRadius: 4 }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks:{color:'#94a3b8'}, grid:{color:'rgba(255,255,255,0.05)'} }, y: { ticks:{color:'#f1f5f9'}, grid:{display:false} } } }
     });
 }
 
-// Eventos Iniciais
 btnAdicionar.addEventListener('click', adicionar);
 filtroMes.addEventListener('change', carregarDados);

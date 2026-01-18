@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador Financeiro</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>CoinManager Pro</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link rel="icon" type="image/png" href="src/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
     <div id="login-overlay" class="login-screen">
@@ -25,17 +23,29 @@
     </div>
 
     <div id="app-container" class="container" style="display: none;">
-
+        
         <div class="user-header">
+            <div class="user-settings">
+                <label for="inputPorcentagem">Meta de Reserva:</label>
+                <div class="input-wrapper-header">
+                    <input type="number" id="inputPorcentagem" value="20" min="0" max="100">
+                    <span>%</span>
+                </div>
+            </div>
+
+            <div class="divider-vertical"></div>
+
             <div class="user-info">
                 <img id="userPhoto" src="" alt="User" class="avatar">
-                <span id="userName">Carregando...</span>
+                <span id="userName">...</span>
             </div>
-            <button id="btnLogout" class="btn-logout">Sair</button>
+            <button id="btnLogout" class="btn-logout" title="Sair">
+                <span class="material-icons-round">logout</span>
+            </button>
         </div>
 
         <header class="dashboard-cards">
-            <div class="card saldo-card highlight-card">
+            <div class="card highlight-card">
                 <div class="header-top">
                     <p>Planejamento</p>
                     <input type="month" id="filtroMes" class="input-mes-dark">
@@ -44,24 +54,30 @@
                 <div class="saldo-valor" id="displaySaldo">R$ ...</div>
             </div>
 
-            <div class="card reserva-card">
-                <h3><span class="material-icons-round" style="color: var(--primary)">savings</span> Reserva (20%)</h3>
+            <div class="card info-card">
+                <div class="card-icon-header">
+                    <span class="material-icons-round" style="color: var(--primary)">savings</span>
+                    <h3>Reserva Automática</h3>
+                </div>
                 <div class="reserva-valor" id="displayReserva">R$ 0,00</div>
-                <p class="reserva-info">Meta de economia mensal.</p>
+                <p class="reserva-info">Valor calculado baseado na meta.</p>
             </div>
 
             <div class="card info-card">
-                <h3><span class="material-icons-round" style="color: var(--text-muted)">insights</span> Status</h3>
-                <p class="dica-texto" id="statusFinanceiro">Analisando seus dados...</p>
+                 <div class="card-icon-header">
+                    <span class="material-icons-round" style="color: #64748b">insights</span>
+                    <h3>Saúde Financeira</h3>
+                </div>
+                 <div id="statusFinanceiro" class="status-box">Calculando...</div>
             </div>
         </header>
 
         <section class="graficos-grid">
-            <div class="card grafico-container">
-                <h3>Fluxo de Caixa</h3>
+            <div class="card grafico-card">
+                <h3>Fluxo (Entrada vs Saída)</h3>
                 <div class="canvas-wrapper"><canvas id="graficoRosca"></canvas></div>
             </div>
-            <div class="card grafico-container">
+            <div class="card grafico-card">
                 <h3>Gastos por Categoria</h3>
                 <div class="canvas-wrapper"><canvas id="graficoBarras"></canvas></div>
             </div>
@@ -70,11 +86,14 @@
         <div class="content-grid">
             <section class="card formulario">
                 <h3><span class="material-icons-round">add_circle</span> Novo Lançamento</h3>
+                
                 <div class="input-group">
-                    <input type="text" id="desc" placeholder="Descrição (Ex: Aluguel)">
+                    <input type="text" id="desc" placeholder="Descrição (Ex: Salário, Netflix)">
                 </div>
+
                 <div class="input-group grid-3">
                     <input type="number" id="valor" placeholder="Valor" step="0.01">
+                    
                     <select id="categoria">
                         <option value="Moradia">🏠 Moradia</option>
                         <option value="Alimentação">🍔 Alimentação</option>
@@ -84,19 +103,36 @@
                         <option value="Educação">📚 Educação</option>
                         <option value="Contas">💡 Contas</option>
                         <option value="Salário">💰 Salário</option>
-                        <option value="Assinatura">🔁 Assinatura</option>
+                        <option value="Investimento">📈 Investimento</option>
                         <option value="Outros">📦 Outros</option>
                     </select>
+
                     <select id="tipo">
                         <option value="saida">Despesa (-)</option>
                         <option value="entrada">Renda (+)</option>
                     </select>
                 </div>
+
+                <div class="opcoes-avancadas">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="checkRepetir">
+                        <span>Repetir ou Parcelar?</span>
+                    </label>
+
+                    <div id="boxRepeticao" class="grid-2" style="display: none;">
+                        <select id="modoRepeticao">
+                            <option value="fixo">Repetir Valor (Mensal)</option>
+                            <option value="parcelado">Parcelar Valor (Total)</option>
+                        </select>
+                        <input type="number" id="qtdeMeses" placeholder="Nº Meses" min="2" max="60">
+                    </div>
+                </div>
+                
                 <button id="btnAdicionar">Salvar Lançamento</button>
             </section>
 
             <section class="card tabela-card">
-                <h3><span class="material-icons-round">history</span> Detalhamento</h3>
+                <h3><span class="material-icons-round">list</span> Extrato</h3>
                 <div class="tabela-container">
                     <table class="tabela-financas">
                         <thead>
@@ -113,16 +149,13 @@
             </section>
         </div>
     </div>
+
     <div id="modal-editar" class="modal-overlay" style="display: none;">
         <div class="card modal-card">
-            <h3><span class="material-icons-round">edit</span> Editar Lançamento</h3>
-
-            <div class="input-group">
-                <input type="text" id="edit-desc" placeholder="Descrição">
-            </div>
-
+            <h3>Editar Lançamento</h3>
+            <div class="input-group"><input type="text" id="edit-desc"></div>
             <div class="input-group grid-2">
-                <input type="number" id="edit-valor" placeholder="Valor" step="0.01">
+                <input type="number" id="edit-valor" step="0.01">
                 <select id="edit-categoria">
                     <option value="Moradia">🏠 Moradia</option>
                     <option value="Alimentação">🍔 Alimentação</option>
@@ -132,25 +165,24 @@
                     <option value="Educação">📚 Educação</option>
                     <option value="Contas">💡 Contas</option>
                     <option value="Salário">💰 Salário</option>
+                    <option value="Investimento">📈 Investimento</option>
                     <option value="Assinatura">🔁 Assinatura</option>
                     <option value="Outros">📦 Outros</option>
                 </select>
             </div>
-
             <div class="input-group">
                 <select id="edit-tipo">
                     <option value="saida">Despesa (-)</option>
                     <option value="entrada">Renda (+)</option>
                 </select>
             </div>
-
             <div class="modal-actions">
                 <button id="btnCancelarEdit" class="btn-secondary">Cancelar</button>
-                <button id="btnSalvarEdit" class="btn-primary">Salvar Alterações</button>
+                <button id="btnSalvarEdit" class="btn-primary">Salvar</button>
             </div>
         </div>
     </div>
+
     <script type="module" src="app.js"></script>
 </body>
-
 </html>
