@@ -79,13 +79,27 @@
                 <p class="reserva-info">Contas pendentes este mês.</p>
             </div>
 
-            <div class="card info-card">
-                <div class="card-icon-header">
-                    <span class="material-icons-round" style="color: #64748b">insights</span>
-                    <h3>Saúde Financeira</h3>
-                </div>
-                <div id="statusFinanceiro" class="status-box">Calculando...</div>
-            </div>
+<div class="card info-card health-card" style="grid-column: 1 / -1;">
+    <div class="header-health">
+        <div class="card-icon-header">
+            <span class="material-icons-round" style="color: #64748b">insights</span>
+            <h3>Saúde Financeira</h3>
+        </div>
+        <div id="statusFinanceiro" class="status-badge">Calculando...</div>
+    </div>
+
+    <div class="health-meter-container">
+        <div class="health-labels">
+            <span>Perigo</span>
+            <span>Estabilidade</span>
+            <span>Liberdade</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div id="healthProgressBar" class="progress-bar-fill" style="width: 0%;"></div>
+        </div>
+        <p id="healthMessage" class="health-message">Analise seus gastos para ver sua pontuação.</p>
+    </div>
+</div>
         </header>
 
         <section class="graficos-grid">
