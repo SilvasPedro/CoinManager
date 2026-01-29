@@ -62,12 +62,21 @@
                     <span class="material-icons-round" style="color: var(--primary)">savings</span>
                     <h3>Reserva Automática</h3>
                 </div>
+
                 <div class="reserva-valor" id="displayReserva">R$ 0,00</div>
                 <p class="reserva-info">Meta de economia mensal.</p>
 
                 <div class="reserva-dica" id="dicaRestante">
                     Sobrará R$ 0,00 livre.
                 </div>
+            </div>
+            <div class="card info-card">
+                <div class="card-icon-header">
+                    <span class="material-icons-round" style="color: var(--danger)">assignment_late</span>
+                    <h3>A Pagar</h3>
+                </div>
+                <div class="reserva-valor" id="displayFalta" style="color: var(--danger)">R$ 0,00</div>
+                <p class="reserva-info">Contas pendentes este mês.</p>
             </div>
 
             <div class="card info-card">
@@ -140,11 +149,14 @@
             </section>
 
             <section class="card tabela-card">
+
                 <h3><span class="material-icons-round">list</span> Extrato</h3>
                 <div class="tabela-container">
+                    <input type="text" id="inputBusca" placeholder="Buscar lançamento..." class="input-busca">
                     <table class="tabela-financas">
                         <thead>
                             <tr>
+                                <th>Status</th>
                                 <th>Categoria</th>
                                 <th>Descrição</th>
                                 <th>Valor</th>

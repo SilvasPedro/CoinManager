@@ -8,7 +8,9 @@ import {
     signOut, onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-// SUAS CHAVES (MANTENHA AS SUAS!)
+// ======================================================
+// CONFIGURAÇÃO
+// ======================================================
 const firebaseConfig = {
     apiKey: "AIzaSyC_4uHxa8NsmExmbZ602r8IsUZg6yvbO7o", 
     authDomain: "coinmanager-7e0bd.firebaseapp.com",
@@ -23,7 +25,9 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// Elementos
+// ======================================================
+// ELEMENTOS DO DOM
+// ======================================================
 const loginScreen = document.getElementById('login-overlay');
 const appContainer = document.getElementById('app-container');
 const btnLogin = document.getElementById('btnLogin');
@@ -38,12 +42,14 @@ const saldoEl = document.getElementById('displaySaldo');
 const reservaEl = document.getElementById('displayReserva');
 const statusEl = document.getElementById('statusFinanceiro');
 
-// Novos Elementos
+// Novos Elementos (Configuração, Pesquisa e Status)
 const inputPorcentagem = document.getElementById('inputPorcentagem');
 const checkRepetir = document.getElementById('checkRepetir');
 const boxRepeticao = document.getElementById('boxRepeticao');
 const modoRepeticao = document.getElementById('modoRepeticao');
 const qtdeMesesInput = document.getElementById('qtdeMeses');
+const inputBusca = document.getElementById('inputBusca'); 
+const displayFalta = document.getElementById('displayFalta'); // <--- NOVO DISPLAY
 
 // Modal
 const modalEditar = document.getElementById('modal-editar');
@@ -54,19 +60,22 @@ const editValor = document.getElementById('edit-valor');
 const editCategoria = document.getElementById('edit-categoria');
 const editTipo = document.getElementById('edit-tipo');
 
-// Variáveis
+// ======================================================
+// ESTADO GLOBAL
+// ======================================================
 let chartRosca = null;
 let chartBarras = null;
 let unsubscribe = null;
 let usuarioAtual = null;
 let idEmEdicao = null;
+let listaTransacoesGlobal = []; 
 
 filtroMes.value = new Date().toISOString().slice(0, 7);
 let porcentagemReserva = localStorage.getItem('user_reserva_pct') || 20;
 inputPorcentagem.value = porcentagemReserva;
 
 // ======================================================
-// INTERAÇÕES
+// EVENTOS & LISTENERS
 // ======================================================
 checkRepetir.addEventListener('change', (e) => {
     boxRepeticao.style.display = e.target.checked ? 'grid' : 'none';
@@ -77,11 +86,20 @@ inputPorcentagem.addEventListener('change', (e) => {
     if(valor < 0) valor = 0; if(valor > 100) valor = 100;
     porcentagemReserva = valor;
     localStorage.setItem('user_reserva_pct', valor);
-    carregarDados(); 
+    recalcularDashboardComDadosAtuais();
 });
 
+if(inputBusca) {
+    inputBusca.addEventListener('input', () => {
+        renderizarTabela(); 
+    });
+}
+
+btnAdicionar.addEventListener('click', adicionar);
+filtroMes.addEventListener('change', carregarDados);
+
 // ======================================================
-// LOGIN
+// AUTENTICAÇÃO
 // ======================================================
 btnLogin.addEventListener('click', () => signInWithPopup(auth, provider));
 btnLogout.addEventListener('click', () => signOut(auth).then(() => window.location.reload()));
@@ -102,7 +120,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // ======================================================
-// FUNÇÕES PRINCIPAIS
+// FUNÇÕES PRINCIPAIS (CRUD)
 // ======================================================
 async function adicionar() {
     if (!usuarioAtual) return;
@@ -138,8 +156,14 @@ async function adicionar() {
             if(isRepetir && modo === 'parcelado') descFinal = `${desc} (${i+1}/${loop})`;
 
             promessas.push(addDoc(collection(db, "financas"), {
-                uid: usuarioAtual.uid, descricao: descFinal, valor: valorFinal, tipo: tipo,
-                categoria: categoria, referencia: `${anoFuturo}-${mesFuturo}`, criadoEm: Date.now() + i
+                uid: usuarioAtual.uid, 
+                descricao: descFinal, 
+                valor: valorFinal, 
+                tipo: tipo,
+                categoria: categoria, 
+                referencia: `${anoFuturo}-${mesFuturo}`, 
+                pago: false, // <--- NOVO CAMPO: Padrão é não pago
+                criadoEm: Date.now() + i
             }));
         }
 
@@ -149,7 +173,6 @@ async function adicionar() {
         document.getElementById('valor').value = "";
         checkRepetir.checked = false;
         boxRepeticao.style.display = 'none';
-        alert("Salvo com sucesso!");
 
     } catch (e) { console.error(e); alert("Erro ao salvar."); } 
     finally { btnAdicionar.disabled = false; btnAdicionar.innerText = "Salvar Lançamento"; }
@@ -162,114 +185,179 @@ function carregarDados() {
     const q = query(collection(db, "financas"), where("uid", "==", usuarioAtual.uid), where("referencia", "==", filtroMes.value));
 
     unsubscribe = onSnapshot(q, (snapshot) => {
-        tabelaEl.innerHTML = "";
+        listaTransacoesGlobal = [];
         let totalEntrada = 0, totalSaida = 0;
+        let totalFaltaPagar = 0; // <--- Variável para acumular o que falta
         const gastosPorCategoria = {};
-        let listaDocs = [];
 
-        snapshot.forEach(doc => listaDocs.push({ id: doc.id, ...doc.data() }));
-        listaDocs.sort((a, b) => b.criadoEm - a.criadoEm);
+        snapshot.forEach(doc => {
+            const dados = { id: doc.id, ...doc.data() };
+            // Garante que o campo 'pago' exista (para registros antigos)
+            if(dados.pago === undefined) dados.pago = false; 
+            
+            listaTransacoesGlobal.push(dados);
 
-        if (listaDocs.length === 0) {
-            tabelaEl.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#666;">Sem dados.</td></tr>';
-            atualizarDashboard(0, 0, {}); return;
-        }
-
-        listaDocs.forEach((dados) => {
             const valor = dados.valor || 0;
-            if (dados.tipo === 'entrada') totalEntrada += valor;
-            else {
+            if (dados.tipo === 'entrada') {
+                totalEntrada += valor;
+            } else {
                 totalSaida += valor;
-                if (dados.categoria !== 'Salário') gastosPorCategoria[dados.categoria] = (gastosPorCategoria[dados.categoria] || 0) + valor;
-            }
+                // Se é saída e NÃO está pago, soma no 'Falta Pagar'
+                if (!dados.pago) totalFaltaPagar += valor;
 
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><span class="tag-categoria">${dados.categoria}</span></td>
-                <td>${dados.descricao}</td>
-                <td class="${dados.tipo === 'entrada' ? 'entrada' : 'saida'}">
-                    ${dados.tipo === 'entrada' ? '+' : '-'} R$ ${valor.toFixed(2)}
-                </td>
-                <td style="white-space:nowrap">
-                    <button class="btn-acao" onclick="abrirModalEdicao('${dados.id}', '${dados.descricao}', ${valor}, '${dados.categoria}', '${dados.tipo}')"><span class="material-icons-round">edit</span></button>
-                    <button class="btn-acao" onclick="deletarItem('${dados.id}')"><span class="material-icons-round">delete</span></button>
-                </td>
-            `;
-            tabelaEl.appendChild(tr);
+                if (dados.categoria !== 'Salário') {
+                    gastosPorCategoria[dados.categoria] = (gastosPorCategoria[dados.categoria] || 0) + valor;
+                }
+            }
         });
 
-        atualizarDashboard(totalEntrada, totalSaida, gastosPorCategoria);
+        listaTransacoesGlobal.sort((a, b) => b.criadoEm - a.criadoEm);
+
+        atualizarDashboard(totalEntrada, totalSaida, gastosPorCategoria, totalFaltaPagar);
+        renderizarTabela(); 
     });
 }
 
-// Localize a função atualizarDashboard e substitua por esta versão:
+// ======================================================
+// CORREÇÃO NA FUNÇÃO DE RENDERIZAR TABELA
+// ======================================================
+function renderizarTabela() {
+    tabelaEl.innerHTML = "";
+    
+    const termo = inputBusca ? inputBusca.value.toLowerCase() : "";
+    
+    const listaFiltrada = listaTransacoesGlobal.filter(item => 
+        item.descricao.toLowerCase().includes(termo) || 
+        item.categoria.toLowerCase().includes(termo)
+    );
 
-function atualizarDashboard(entrada, saida, categorias) {
-    // 1. Elementos (Se preferir, declare lá no topo, mas funciona aqui também)
+    if (listaFiltrada.length === 0) {
+        tabelaEl.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#666;">Nenhum lançamento encontrado.</td></tr>';
+        return;
+    }
+
+    listaFiltrada.forEach((dados) => {
+        const tr = document.createElement('tr');
+        const valorFormatado = dados.valor.toFixed(2);
+        
+        // --- INÍCIO DA MUDANÇA DO CHECKBOX ---
+        let checkIconHTML = '';
+
+        if (dados.tipo === 'entrada') {
+            // Entradas: Mostra sempre o "check" verde fixo (não clicável), pois já é dinheiro em conta.
+            checkIconHTML = `<span class="material-icons-round" style="font-size:22px; color:var(--success); opacity: 0.7; cursor: default;" title="Entrada confirmada">check_circle</span>`;
+        } else {
+            // Saídas: Lógica de alternar ícones
+            if (dados.pago) {
+                // ESTADO 1: PAGO (Ícone check_circle verde)
+                // Ao clicar, enviamos 'false' para desmarcar
+                checkIconHTML = `
+                    <span class="material-icons-round" 
+                          style="font-size:22px; color:var(--success); cursor: pointer; transition: transform 0.1s" 
+                          onclick="togglePago('${dados.id}', false)"
+                          onmousedown="this.style.transform='scale(0.9)'" 
+                          onmouseup="this.style.transform='scale(1)'"
+                          title="Clique para marcar como pendente">
+                        check_circle
+                    </span>`;
+            } else {
+                // ESTADO 2: PENDENTE (Ícone radio_button_unchecked cinza - círculo vazio)
+                // Ao clicar, enviamos 'true' para marcar como pago
+                checkIconHTML = `
+                    <span class="material-icons-round" 
+                          style="font-size:22px; color:var(--text-muted); cursor: pointer; transition: transform 0.1s" 
+                          onclick="togglePago('${dados.id}', true)"
+                          onmousedown="this.style.transform='scale(0.9)'" 
+                          onmouseup="this.style.transform='scale(1)'"
+                          title="Clique para marcar como pago">
+                        radio_button_unchecked
+                    </span>`;
+            }
+        }
+        // --- FIM DA MUDANÇA DO CHECKBOX ---
+
+        // Estilo visual para riscar o texto se pago e for saída
+        const estiloTexto = dados.pago && dados.tipo === 'saida' ? 'text-decoration: line-through; opacity: 0.5;' : '';
+
+        tr.innerHTML = `
+            <td style="text-align: center; vertical-align: middle;">${checkIconHTML}</td>
+            <td style="vertical-align: middle;"><span class="tag-categoria">${dados.categoria}</span></td>
+            <td style="${estiloTexto}; vertical-align: middle;">${dados.descricao}</td>
+            <td class="${dados.tipo === 'entrada' ? 'entrada' : 'saida'}" style="${estiloTexto}; vertical-align: middle;">
+                ${dados.tipo === 'entrada' ? '+' : '-'} R$ ${valorFormatado}
+            </td>
+            <td style="white-space:nowrap; vertical-align: middle;">
+                <button class="btn-acao" onclick="abrirModalEdicao('${dados.id}', '${dados.descricao}', ${dados.valor}, '${dados.categoria}', '${dados.tipo}')"><span class="material-icons-round">edit</span></button>
+                <button class="btn-acao" onclick="deletarItem('${dados.id}')"><span class="material-icons-round">delete</span></button>
+            </td>
+        `;
+        tabelaEl.appendChild(tr);
+    });
+}
+
+function recalcularDashboardComDadosAtuais() {
+    let entrada = 0, saida = 0, falta = 0;
+    listaTransacoesGlobal.forEach(d => {
+        if(d.tipo === 'entrada') entrada += d.valor;
+        else {
+            saida += d.valor;
+            if(!d.pago) falta += d.valor;
+        }
+    });
+    atualizarDashboard(entrada, saida, {}, falta); 
+}
+
+// Recebe o novo parâmetro 'faltaPagar'
+function atualizarDashboard(entrada, saida, categorias, faltaPagar) {
     const dicaEl = document.getElementById('dicaRestante');
+    
+    if(Object.keys(categorias).length > 0 || (entrada === 0 && saida === 0)) {
+        atualizarGraficos(entrada, saida, categorias);
+    }
 
     const saldo = entrada - saida;
     saldoEl.innerText = `R$ ${saldo.toFixed(2)}`;
     
-    // 2. Calcula a Reserva
     const pct = porcentagemReserva / 100;
     const reservaMeta = saldo > 0 ? saldo * pct : 0;
     reservaEl.innerText = `R$ ${reservaMeta.toFixed(2)}`;
+
+    // ATUALIZA O CARD "A PAGAR"
+    if(displayFalta) {
+        displayFalta.innerText = `R$ ${faltaPagar.toFixed(2)}`;
+        // Se falta pagar for 0 e houver saídas, fica verde (parabéns!)
+        if(faltaPagar === 0 && saida > 0) displayFalta.style.color = 'var(--success)';
+        else displayFalta.style.color = 'var(--danger)';
+    }
     
-    // 3. NOVO: Calcula o Saldo "Livre" (Pós-Investimento)
     const saldoLivre = saldo - reservaMeta;
 
     if (saldo > 0) {
-        // Mostra quanto sobra se a pessoa investir
         dicaEl.innerHTML = `Sobrará <strong>R$ ${saldoLivre.toFixed(2)}</strong> livre.`;
-        dicaEl.style.color = 'var(--text-muted)'; // Cor normal
+        dicaEl.style.color = 'var(--text-muted)';
     } else {
-        // Se estiver negativo ou zerado, esconde ou mostra aviso
         dicaEl.innerHTML = "Sem saldo para investir.";
-        dicaEl.style.color = 'var(--danger)'; // Cor vermelha sutil
+        dicaEl.style.color = 'var(--danger)';
     }
     
-    // 4. Lógica de Status (Mantida)
     let htmlStatus = '';
     if (entrada === 0) {
         htmlStatus = '<span style="color: var(--text-muted)">Aguardando renda...</span>';
     } else {
         const taxaPoupanca = (saldo / entrada) * 100;
-
-        if (saldo < 0) {
-            htmlStatus = `<span style="color: var(--danger); font-weight:bold">Endividado (${taxaPoupanca.toFixed(1)}%)</span>`;
-        } else if (taxaPoupanca < 5) {
-            htmlStatus = `<span style="color: #f87171">No Limite (${taxaPoupanca.toFixed(1)}%)</span>`;
-        } else if (taxaPoupanca < 15) {
-            htmlStatus = `<span style="color: #facc15">Atenção (${taxaPoupanca.toFixed(1)}%)</span>`;
-        } else if (taxaPoupanca < 30) {
-            htmlStatus = `<span style="color: #34d399">Saudável (${taxaPoupanca.toFixed(1)}%)</span>`;
-        } else {
-            htmlStatus = `<span style="color: #14b8a6; font-weight:bold">Investidor (${taxaPoupanca.toFixed(1)}%)</span>`;
-        }
+        if (saldo < 0) htmlStatus = `<span style="color: var(--danger); font-weight:bold">Endividado (${taxaPoupanca.toFixed(1)}%)</span>`;
+        else if (taxaPoupanca < 5) htmlStatus = `<span style="color: #f87171">No Limite (${taxaPoupanca.toFixed(1)}%)</span>`;
+        else if (taxaPoupanca < 15) htmlStatus = `<span style="color: #facc15">Atenção (${taxaPoupanca.toFixed(1)}%)</span>`;
+        else if (taxaPoupanca < 30) htmlStatus = `<span style="color: #34d399">Saudável (${taxaPoupanca.toFixed(1)}%)</span>`;
+        else htmlStatus = `<span style="color: #14b8a6; font-weight:bold">Investidor (${taxaPoupanca.toFixed(1)}%)</span>`;
     }
-
     statusEl.innerHTML = htmlStatus;
-    atualizarGraficos(entrada, saida, categorias);
 }
-
-// Funções Globais e Gráficos
-window.deletarItem = async function(id) { if(confirm("Apagar?")) await deleteDoc(doc(db, "financas", id)); }
-window.abrirModalEdicao = function(id, desc, valor, categoria, tipo) {
-    idEmEdicao = id; editDesc.value = desc; editValor.value = valor; editCategoria.value = categoria; editTipo.value = tipo; modalEditar.style.display = 'flex';
-}
-btnCancelarEdit.addEventListener('click', () => { modalEditar.style.display = 'none'; idEmEdicao = null; });
-btnSalvarEdit.addEventListener('click', async () => {
-    if(!idEmEdicao) return;
-    try {
-        await updateDoc(doc(db, "financas", idEmEdicao), { descricao: editDesc.value, valor: parseFloat(editValor.value), categoria: editCategoria.value, tipo: editTipo.value });
-        modalEditar.style.display = 'none';
-    } catch(e) { console.error(e); } finally { idEmEdicao = null; }
-});
 
 function atualizarGraficos(entrada, saida, categorias) {
     const ctxRosca = document.getElementById('graficoRosca').getContext('2d');
     if (chartRosca) chartRosca.destroy();
+    
     chartRosca = new Chart(ctxRosca, {
         type: 'doughnut',
         data: { labels: ['Renda', 'Despesas'], datasets: [{ data: [entrada, saida], backgroundColor: ['#34d399', '#f87171'], borderWidth: 0 }] },
@@ -278,6 +366,7 @@ function atualizarGraficos(entrada, saida, categorias) {
 
     const ctxBarras = document.getElementById('graficoBarras').getContext('2d');
     if (chartBarras) chartBarras.destroy();
+    
     chartBarras = new Chart(ctxBarras, {
         type: 'bar',
         data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias), backgroundColor: ['#14b8a6', '#0ea5e9', '#6366f1', '#d946ef', '#f43f5e'], borderRadius: 4 }] },
@@ -285,5 +374,41 @@ function atualizarGraficos(entrada, saida, categorias) {
     });
 }
 
-btnAdicionar.addEventListener('click', adicionar);
-filtroMes.addEventListener('change', carregarDados);
+// ======================================================
+// FUNÇÕES GLOBAIS (MODAIS E AÇÕES)
+// ======================================================
+window.deletarItem = async function(id) { if(confirm("Apagar?")) await deleteDoc(doc(db, "financas", id)); }
+
+// NOVA FUNÇÃO GLOBAL: TOGGLE PAGO
+window.togglePago = async function(id, novoStatus) {
+    try {
+        // Atualiza no Firebase, o listener onSnapshot vai detetar e atualizar a tela automaticamente
+        await updateDoc(doc(db, "financas", id), { pago: novoStatus });
+    } catch(e) {
+        console.error("Erro ao atualizar status:", e);
+        alert("Erro ao marcar como pago.");
+    }
+}
+
+window.abrirModalEdicao = function(id, desc, valor, categoria, tipo) {
+    idEmEdicao = id; 
+    editDesc.value = desc; 
+    editValor.value = valor; 
+    editCategoria.value = categoria; 
+    editTipo.value = tipo; 
+    modalEditar.style.display = 'flex';
+}
+
+btnCancelarEdit.addEventListener('click', () => { modalEditar.style.display = 'none'; idEmEdicao = null; });
+btnSalvarEdit.addEventListener('click', async () => {
+    if(!idEmEdicao) return;
+    try {
+        await updateDoc(doc(db, "financas", idEmEdicao), { 
+            descricao: editDesc.value, 
+            valor: parseFloat(editValor.value), 
+            categoria: editCategoria.value, 
+            tipo: editTipo.value 
+        });
+        modalEditar.style.display = 'none';
+    } catch(e) { console.error(e); } finally { idEmEdicao = null; }
+});
