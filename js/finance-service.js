@@ -5,6 +5,30 @@ import { collection, doc, onSnapshot, query, where, updateDoc, deleteDoc, getDoc
 const collectionName = 'financas';
 
 export const FinanceService = {
+
+    async togglePaidStatus(id, currentStatus) {
+        const docRef = doc(db, collectionName, id);
+        await updateDoc(docRef, { pago: !currentStatus });
+    },
+
+    calculateTotals(transactions, investmentPercentage) {
+        const totals = transactions.reduce((acc, curr) => {
+            if (curr.tipo === 'entrada') {
+                acc.income += curr.valor;
+            } else if (curr.tipo === 'saida') {
+                acc.expense += curr.valor;
+                // Soma apenas se NÃO estiver pago
+                if (curr.pago === false) {
+                    acc.pendingExpense += curr.valor;
+                }
+            }
+            return acc;
+        }, { income: 0, expense: 0, pendingExpense: 0 }); // Inicialize pendingExpense
+
+        totals.balance = totals.income - totals.expense;
+        totals.investment = totals.balance > 0 ? totals.balance * parseFloat(investmentPercentage) : 0;
+        return totals;
+    },
     
     subscribeToTransactions(userId, mesReferencia, callback) {
         const q = query(
@@ -53,9 +77,9 @@ export const FinanceService = {
                     valor: parseFloat(valor),
                     tipo: tipo,
                     categoria: categoria,
-                    pago: true,
+                    pago: tipo === 'entrada' ? true : false, // <-- AQUI FOI CORRIGIDO
                     referencia: refMes,
-                    criadoEm: Date.now() + monthsOffset // Offset mínimo p/ manter a ordem de criação
+                    criadoEm: Date.now() + monthsOffset
                 });
                 
                 monthsOffset++;
@@ -71,7 +95,7 @@ export const FinanceService = {
                 valor: parseFloat(valor),
                 tipo: tipo,
                 categoria: categoria,
-                pago: true,
+                pago: tipo === 'entrada' ? true : false, // <-- AQUI FOI CORRIGIDO
                 referencia: referencia,
                 criadoEm: Date.now()
             });
@@ -100,12 +124,19 @@ export const FinanceService = {
         await deleteDoc(docRef);
     },
 
-    calculateTotals(transactions, investmentPercentage) {
+   calculateTotals(transactions, investmentPercentage) {
         const totals = transactions.reduce((acc, curr) => {
-            if (curr.tipo === 'entrada') acc.income += curr.valor;
-            else if (curr.tipo === 'saida') acc.expense += curr.valor;
+            if (curr.tipo === 'entrada') {
+                acc.income += curr.valor;
+            } else if (curr.tipo === 'saida') {
+                acc.expense += curr.valor;
+                // Se for falso OU indefinido (registros velhos), conta como pendente
+                if (curr.pago === false || curr.pago === undefined) {
+                    acc.pendingExpense += curr.valor;
+                }
+            }
             return acc;
-        }, { income: 0, expense: 0 });
+        }, { income: 0, expense: 0, pendingExpense: 0 }); // <-- A CORREÇÃO DO NaN ESTÁ AQUI (pendingExpense: 0)
 
         totals.balance = totals.income - totals.expense;
         totals.investment = totals.balance > 0 ? totals.balance * parseFloat(investmentPercentage) : 0;

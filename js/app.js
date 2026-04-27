@@ -276,6 +276,10 @@ const updateDashboard = async () => {
     document.getElementById('total-expense').textContent = formatCurrency(totals.expense);
     document.getElementById('total-balance').textContent = formatCurrency(totals.balance);
     document.getElementById('total-investment').textContent = formatCurrency(totals.investment);
+
+    // ATUALIZAÇÃO: Mostra o quanto falta pagar
+    document.getElementById('pending-expense').textContent = formatCurrency(totals.pendingExpense);
+
     document.getElementById('invest-label').textContent = `${(percent * 100).toFixed(0)}%`;
 
     updateFinancialStatus(totals);
@@ -305,11 +309,28 @@ const renderList = (transactions) => {
         };
         const catText = categoryEmojis[t.categoria] || t.categoria || '📦 Outros';
 
+        // Lógica do botão de pago (Renderizado apenas se for uma despesa)
+// Lógica do botão de pago com visual melhorado
+        const paidBtn = t.tipo === 'saida' ? `
+            <button data-id="${t.id}" data-pago="${t.pago}" class="btn-toggle-paid p-2 md:p-1.5 rounded-lg md:rounded transition-all flex items-center justify-center ${t.pago ? 'bg-green-100/50 hover:bg-green-200/50' : 'bg-gray-50 md:bg-transparent border border-gray-100 md:border-none hover:bg-orange-50'}" title="${t.pago ? 'Marcar como Pendente' : 'Marcar como Pago'}">
+                ${t.pago 
+                    // SVG de Pago (Círculo sólido com check branco vazado)
+                    ? `<svg class="w-6 h-6 md:w-5 md:h-5 pointer-events-none text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                       </svg>`
+                    // SVG de Pendente (Círculo cinza com check vazado)
+                    : `<svg class="w-6 h-6 md:w-5 md:h-5 pointer-events-none text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                       </svg>`
+                }
+            </button>
+        ` : '';
+
         const tr = document.createElement('tr');
 
-        // Classes adaptativas: Flex no mobile, linha de tabela no desktop
-        // Adiciona fundo branco, bordas arredondadas e sombra apenas no celular (desativando no desktop com md:none)
+        // Mantém as classes do layout de Cartões Separados no mobile
         tr.className = "flex flex-col md:table-row bg-white rounded-2xl md:rounded-none shadow-sm md:shadow-none border border-gray-100 md:border-none hover:bg-gray-50/50 transition-colors p-5 md:p-0";
+
         tr.innerHTML = `
             <td class="block md:table-cell md:px-6 md:py-4 text-sm text-gray-500 mb-2 md:mb-0">
                 <div class="flex justify-between items-center md:block">
@@ -334,6 +355,7 @@ const renderList = (transactions) => {
                     </span>
                     
                     <div class="flex items-center gap-2 md:hidden">
+                        ${paidBtn}
                         <button data-id="${t.id}" class="btn-edit text-blue-500 hover:bg-blue-50 p-2 rounded-lg bg-gray-50 border border-gray-100 transition-all" title="Editar">
                             <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </button>
@@ -346,6 +368,7 @@ const renderList = (transactions) => {
 
             <td class="hidden md:table-cell md:px-6 md:py-4 text-center">
                 <div class="flex items-center justify-center gap-3">
+                    ${paidBtn}
                     <button data-id="${t.id}" class="btn-edit text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded transition-all" title="Editar">
                         <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                     </button>
@@ -357,7 +380,9 @@ const renderList = (transactions) => {
         `;
         transactionList.appendChild(tr);
     });
-};
+}
+
+
 
 transactionList.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
@@ -381,9 +406,7 @@ transactionList.addEventListener('click', (e) => {
             document.getElementById('date-input').value = tx.data || '';
             document.getElementById('desc-input').value = tx.descricao;
             document.getElementById('amount-input').value = tx.valor;
-            // Remove a parte de parcelas do nome (ex: "(1/3)") para editar de forma mais limpa, se quiser
-            // Aqui deixamos original para evitar regex complexo, mas preenche a categoria certa:
-
+            
             const catInput = document.getElementById('category-input');
             if (Array.from(catInput.options).some(opt => opt.value === tx.categoria)) {
                 catInput.value = tx.categoria;
@@ -394,6 +417,21 @@ transactionList.addEventListener('click', (e) => {
             document.querySelector(`input[name="type"][value="${tx.tipo}"]`).checked = true;
             openFormModal(true);
         }
+    } else if (btn.classList.contains('btn-toggle-paid')) {
+        // LÓGICA DO BOTÃO PAGO CORRIGIDA
+        const id = btn.dataset.id;
+        // Pega o valor atual como booleano (se for 'true' vira true, qualquer outra coisa vira false)
+        const currentStatus = btn.dataset.pago === 'true'; 
+        
+        FinanceService.togglePaidStatus(id, currentStatus)
+            .then(() => {
+                showToast(currentStatus ? 'Marcado como pendente' : 'Marcado como pago', 'success');
+                updateDashboard(); // Recalcula o dashboard imediatamente
+            })
+            .catch(err => {
+                console.error("Erro ao alterar status: ", err);
+                showToast('Erro ao atualizar status.', 'error');
+            });
     }
 });
 
