@@ -1,223 +1,242 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planejador Financeiro</title>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Gestão Financeira</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css">
-    <link rel="shortcut icon" href="src/favicon.png" type="image/x-icon">
+    <script>
+        tailwind.config = {
+            theme: { 
+                extend: { 
+                    colors: { petroleo: { DEFAULT: '#114B4C', dark: '#0A2F30', light: '#1B7577' } },
+                    animation: { 'slide-in': 'slideIn 0.3s ease-out forwards' },
+                    keyframes: { slideIn: { '0%': { transform: 'translateY(-100%)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } } }
+                } 
+            }
+        }
+    </script>
+    <script type="module" src="./js/app.js" defer></script>
 </head>
+<body class="bg-gray-50 text-gray-800 antialiased min-h-screen flex flex-col font-sans">
 
-<body>
+    <div id="toast-container" class="fixed top-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none"></div>
 
-    <div id="login-overlay" class="login-screen">
-        <div class="login-card">
-            <h1>💎 Planejador Financeiro</h1>
-            <p>Seu planejador financeiro inteligente.</p>
-            <button id="btnLogin" class="btn-google">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
+    <div id="login-screen" class="fixed inset-0 bg-gradient-to-br from-petroleo-dark to-petroleo flex flex-col items-center justify-center z-50 transition-opacity duration-500">
+        <div class="bg-white p-10 rounded-2xl shadow-2xl max-w-sm w-full text-center">
+            <h1 class="text-3xl font-bold text-petroleo mb-2">Finanças App</h1>
+            <p class="text-gray-500 mb-8">Acesse seu painel financeiro.</p>
+            <button id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg">
                 Entrar com Google
             </button>
         </div>
     </div>
 
-    <div id="app-container" class="container" style="display: none;">
-
-        <div class="user-header">
-            <div class="user-settings">
-                <label for="inputPorcentagem">Meta de Reserva:</label>
-                <div class="input-wrapper-header">
-                    <input type="number" id="inputPorcentagem" value="20" min="0" max="100">
-                    <span>%</span>
+    <div id="main-app" class="hidden flex-1 flex flex-col relative">
+        <header class="bg-gradient-to-r from-petroleo-dark to-petroleo text-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-8 w-full md:w-auto">
+                    <h1 class="text-2xl font-bold tracking-wider">Finanças</h1>
+                    <nav class="flex gap-6 text-sm font-medium">
+                        <button class="nav-btn active text-white border-b-2 border-white pb-1" data-target="view-dashboard">Dashboard</button>
+                        <button class="nav-btn text-gray-300 hover:text-white border-b-2 border-transparent hover:border-gray-300 pb-1 transition-all" data-target="view-lancamentos">Lançamentos</button>
+                    </nav>
+                </div>
+                
+                <div class="flex items-center gap-5 w-full md:w-auto justify-between md:justify-end">
+                    <input type="month" id="month-selector" class="bg-white/10 backdrop-blur-md text-white text-sm rounded-lg px-3 py-2 border border-white/20 focus:outline-none focus:ring-2 focus:ring-petroleo-light transition-all cursor-pointer">
+                    
+                    <div class="h-6 w-px bg-white/20 hidden md:block"></div>
+                    <div class="flex items-center gap-3">
+                        <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-petroleo-light shadow-sm">
+                        <button id="btn-logout" class="text-sm text-gray-300 hover:text-white transition-colors">Sair</button>
+                    </div>
                 </div>
             </div>
-
-            <div class="divider-vertical"></div>
-
-            <div class="user-info">
-                <img id="userPhoto" src="" alt="User" class="avatar">
-                <span id="userName">...</span>
-            </div>
-            <button id="btnLogout" class="btn-logout" title="Sair">
-                <span class="material-icons-round">logout</span>
-            </button>
-        </div>
-
-        <header class="dashboard-cards">
-            <div class="card highlight-card">
-                <div class="header-top">
-                    <p>Planejamento</p>
-                    <input type="month" id="filtroMes" class="input-mes-dark">
-                </div>
-                <p class="label-saldo">Saldo Previsto</p>
-                <div class="saldo-valor" id="displaySaldo">R$ ...</div>
-            </div>
-
-            <div class="card info-card">
-                <div class="card-icon-header">
-                    <span class="material-icons-round" style="color: var(--primary)">savings</span>
-                    <h3>Reserva Automática</h3>
-                </div>
-
-                <div class="reserva-valor" id="displayReserva">R$ 0,00</div>
-                <p class="reserva-info">Meta de economia mensal.</p>
-
-                <div class="reserva-dica" id="dicaRestante">
-                    Sobrará R$ 0,00 livre.
-                </div>
-            </div>
-            <div class="card info-card">
-                <div class="card-icon-header">
-                    <span class="material-icons-round" style="color: var(--danger)">assignment_late</span>
-                    <h3>A Pagar</h3>
-                </div>
-                <div class="reserva-valor" id="displayFalta" style="color: var(--danger)">R$ 0,00</div>
-                <p class="reserva-info">Contas pendentes este mês.</p>
-            </div>
-
-<div class="card info-card health-card" style="grid-column: 1 / -1;">
-    <div class="header-health">
-        <div class="card-icon-header">
-            <span class="material-icons-round" style="color: #64748b">insights</span>
-            <h3>Saúde Financeira</h3>
-        </div>
-        <div id="statusFinanceiro" class="status-badge">Calculando...</div>
-    </div>
-
-    <div class="health-meter-container">
-        <div class="health-labels">
-            <span>Perigo</span>
-            <span>Estabilidade</span>
-            <span>Liberdade</span>
-        </div>
-        <div class="progress-bar-bg">
-            <div id="healthProgressBar" class="progress-bar-fill" style="width: 0%;"></div>
-        </div>
-        <p id="healthMessage" class="health-message">Analise seus gastos para ver sua pontuação.</p>
-    </div>
-</div>
         </header>
 
-        <section class="graficos-grid">
-            <div class="card grafico-card">
-                <h3>Fluxo (Entrada vs Saída)</h3>
-                <div class="canvas-wrapper"><canvas id="graficoRosca"></canvas></div>
-            </div>
-            <div class="card grafico-card">
-                <h3>Gastos por Categoria</h3>
-                <div class="canvas-wrapper"><canvas id="graficoBarras"></canvas></div>
-            </div>
-        </section>
-
-        <div class="content-grid">
-            <section class="card formulario">
-                <h3><span class="material-icons-round">add_circle</span> Novo Lançamento</h3>
-
-                <div class="input-group">
-                    <input type="text" id="desc" placeholder="Descrição (Ex: Salário, Netflix)">
-                </div>
-
-                <div class="input-group grid-3">
-                    <input type="number" id="valor" placeholder="Valor" step="0.01">
-
-                    <select id="categoria">
-                        <option value="Moradia">🏠 Moradia</option>
-                        <option value="Alimentação">🍔 Alimentação</option>
-                        <option value="Transporte">🚗 Transporte</option>
-                        <option value="Lazer">🎉 Lazer</option>
-                        <option value="Saúde">💊 Saúde</option>
-                        <option value="Educação">📚 Educação</option>
-                        <option value="Contas">💡 Contas</option>
-                        <option value="Salário">💰 Salário</option>
-                        <option value="Investimento">📈 Investimento</option>
-                        <option value="Assinatura">🔁 Assinatura</option>
-                        <option value="Outros">📦 Outros</option>
-                    </select>
-
-                    <select id="tipo">
-                        <option value="saida">Despesa (-)</option>
-                        <option value="entrada">Renda (+)</option>
-                    </select>
-                </div>
-
-                <div class="opcoes-avancadas">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="checkRepetir">
-                        <span>Repetir ou Parcelar?</span>
-                    </label>
-
-                    <div id="boxRepeticao" class="grid-2" style="display: none;">
-                        <select id="modoRepeticao">
-                            <option value="fixo">Repetir Valor (Mensal)</option>
-                            <option value="parcelado">Parcelar Valor (Total)</option>
+        <main class="max-w-7xl mx-auto px-6 py-8 w-full flex-1">
+            <div id="view-dashboard" class="view-section transition-opacity duration-300">
+                <div class="flex justify-between items-end mb-8">
+                    <h2 class="text-2xl font-semibold text-gray-800">Visão Geral</h2>
+                    <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm border border-gray-100">
+                        <label for="investment-percent" class="text-sm text-gray-500">Meta Inv.:</label>
+                        <select id="investment-percent" class="bg-transparent text-gray-800 font-medium text-sm focus:outline-none cursor-pointer">
+                            <option value="0.10">10%</option>
+                            <option value="0.15">15%</option>
+                            <option value="0.20">20%</option>
+                            <option value="0.30">30%</option>
                         </select>
-                        <input type="number" id="qtdeMeses" placeholder="Nº Meses" min="2" max="60">
                     </div>
                 </div>
 
-                <button id="btnAdicionar">Salvar Lançamento</button>
-            </section>
+                <section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-2"><h3 class="text-gray-500 text-sm font-medium">Receitas</h3><span class="bg-green-50 text-green-600 p-2 rounded-lg text-xs">↑</span></div>
+                        <p class="text-3xl font-bold text-gray-800" id="total-income">R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                         <div class="flex items-center justify-between mb-2"><h3 class="text-gray-500 text-sm font-medium">Despesas</h3><span class="bg-red-50 text-red-600 p-2 rounded-lg text-xs">↓</span></div>
+                        <p class="text-3xl font-bold text-gray-800" id="total-expense">R$ 0,00</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-petroleo to-petroleo-light text-white p-6 rounded-2xl shadow-md flex flex-col justify-between">
+                        <h3 class="text-white/80 text-sm font-medium mb-2">Saldo Mensal</h3>
+                        <p class="text-3xl font-bold" id="total-balance">R$ 0,00</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 text-white p-6 rounded-2xl shadow-md flex flex-col justify-between relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-bl-full"></div>
+                        <h3 class="text-gray-400 text-sm font-medium mb-2">Reserva (<span id="invest-label">10%</span>)</h3>
+                        <p class="text-3xl font-bold text-green-400" id="total-investment">R$ 0,00</p>
+                    </div>
+                </section>
 
-            <section class="card tabela-card">
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                    <div class="flex justify-between items-end mb-3">
+                        <div><h3 class="text-sm font-medium text-gray-500">Saúde Financeira (Saldo vs Receita)</h3><p id="status-message" class="text-lg font-semibold text-gray-800 mt-1">Analisando...</p></div>
+                        <span id="status-percentage" class="text-2xl font-bold text-gray-300">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden flex"><div id="status-bar-fill" class="h-full rounded-full transition-all duration-1000 w-0 bg-gray-300"></div></div>
+                </section>
 
-                <h3><span class="material-icons-round">list</span> Extrato</h3>
-                <div class="tabela-container">
-                    <input type="text" id="inputBusca" placeholder="Buscar lançamento..." class="input-busca">
-                    <table class="tabela-financas">
-                        <thead>
-                            <tr>
-                                <th>Status</th>
-                                <th>Categoria</th>
-                                <th>Descrição</th>
-                                <th>Valor</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="listaTransacoes"></tbody>
-                    </table>
+                <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-1">
+                        <h3 class="text-sm font-medium text-gray-500 mb-6">Receitas vs Despesas</h3>
+                        <div class="relative h-56 w-full flex justify-center items-center"><canvas id="doughnutChart"></canvas></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
+                        <h3 class="text-sm font-medium text-gray-500 mb-6">Evolução do Saldo (Últimos 6 Meses)</h3>
+                        <div class="relative h-56 w-full"><canvas id="evolutionChart"></canvas></div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="view-lancamentos" class="view-section hidden transition-opacity duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-800">Registros do Mês</h2>
+                    <button id="btn-open-modal" class="bg-petroleo hover:bg-petroleo-light text-white font-medium py-2 px-5 rounded-lg shadow-md transition-all flex items-center gap-2 hover:-translate-y-0.5">
+                        <span class="text-lg leading-none">+</span> Novo
+                    </button>
                 </div>
-            </section>
+
+                <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50/80 backdrop-blur-sm border-b border-gray-100">
+                                <tr class="text-xs text-gray-500 uppercase tracking-wider">
+                                    <th class="px-6 py-4 font-semibold">Data</th>
+                                    <th class="px-6 py-4 font-semibold">Descrição</th>
+                                    <th class="px-6 py-4 font-semibold">Tipo</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Valor</th>
+                                    <th class="px-6 py-4 font-semibold text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transaction-list" class="text-sm divide-y divide-gray-50 bg-white">
+                                </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <div id="form-modal" class="hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[55] flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h2 class="text-xl font-semibold text-petroleo" id="form-title">Novo Lançamento</h2>
+                <button id="btn-close-modal" class="text-gray-400 hover:text-gray-600 transition-colors text-2xl leading-none">&times;</button>
+            </div>
+            
+            <form id="transaction-form" class="p-6 space-y-4">
+                <input type="hidden" id="edit-id">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                        <input type="date" id="date-input" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-petroleo/20 focus:border-petroleo transition-all">
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                        <select id="category-input" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-petroleo/20 focus:border-petroleo transition-all cursor-pointer">
+                            <option value="Moradia">🏠 Moradia</option>
+                            <option value="Alimentação">🍔 Alimentação</option>
+                            <option value="Transporte">🚗 Transporte</option>
+                            <option value="Lazer">🎉 Lazer</option>
+                            <option value="Saúde">💊 Saúde</option>
+                            <option value="Educação">📚 Educação</option>
+                            <option value="Contas">💡 Contas</option>
+                            <option value="Salário">💰 Salário</option>
+                            <option value="Investimento">📈 Investimento</option>
+                            <option value="Assinatura">🔄 Assinatura</option>
+                            <option value="Outros" selected>📦 Outros</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                    <input type="text" id="desc-input" required placeholder="Ex: Salário, Mercado..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-petroleo/20 focus:border-petroleo transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Valor da Parcela (R$)</label>
+                    <input type="number" id="amount-input" required step="0.01" min="0.01" placeholder="0,00" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-petroleo/20 focus:border-petroleo transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+                    <div class="flex gap-4 p-1 bg-gray-50 rounded-xl border border-gray-200">
+                        <label class="flex-1 text-center cursor-pointer relative">
+                            <input type="radio" name="type" value="entrada" checked class="peer sr-only">
+                            <div class="py-2 rounded-lg text-sm font-medium text-gray-500 peer-checked:bg-green-100 peer-checked:text-green-700 transition-all">Entrada</div>
+                        </label>
+                        <label class="flex-1 text-center cursor-pointer relative">
+                            <input type="radio" name="type" value="saida" class="peer sr-only">
+                            <div class="py-2 rounded-lg text-sm font-medium text-gray-500 peer-checked:bg-red-100 peer-checked:text-red-700 transition-all">Saída</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="installment-container" class="pt-2 border-t border-gray-100">
+                    <label class="flex items-center gap-2 cursor-pointer w-fit">
+                        <input type="checkbox" id="is-installment" class="w-4 h-4 text-petroleo border-gray-300 rounded focus:ring-petroleo">
+                        <span class="text-sm font-medium text-gray-700">Compra Parcelada?</span>
+                    </label>
+                    
+                    <div id="installment-fields" class="hidden grid-cols-2 gap-4 mt-3 bg-petroleo/5 p-4 rounded-xl border border-petroleo/10">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Parcela Atual (Mês do Lançamento)</label>
+                            <input type="number" id="current-installment" min="1" value="1" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-petroleo text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Total de Parcelas</label>
+                            <input type="number" id="total-installments" min="2" value="2" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-petroleo text-sm">
+                        </div>
+                        <p class="col-span-2 text-xs text-gray-500 italic mt-1">O sistema gerará automaticamente os lançamentos dos próximos meses.</p>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button type="button" id="btn-cancel-modal" class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Cancelar</button>
+                    <button type="submit" id="btn-submit" class="flex-1 px-4 py-2.5 bg-petroleo hover:bg-petroleo-light text-white font-medium rounded-xl shadow-md transition-colors">Salvar</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div id="modal-editar" class="modal-overlay" style="display: none;">
-        <div class="card modal-card">
-            <h3>Editar Lançamento</h3>
-            <div class="input-group"><input type="text" id="edit-desc"></div>
-            <div class="input-group grid-2">
-                <input type="number" id="edit-valor" step="0.01">
-                <select id="edit-categoria">
-                    <option value="Moradia">🏠 Moradia</option>
-                    <option value="Alimentação">🍔 Alimentação</option>
-                    <option value="Transporte">🚗 Transporte</option>
-                    <option value="Lazer">🎉 Lazer</option>
-                    <option value="Saúde">💊 Saúde</option>
-                    <option value="Educação">📚 Educação</option>
-                    <option value="Contas">💡 Contas</option>
-                    <option value="Salário">💰 Salário</option>
-                    <option value="Investimento">📈 Investimento</option>
-                    <option value="Assinatura">🔁 Assinatura</option>
-                    <option value="Outros">📦 Outros</option>
-                </select>
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[65] flex items-center justify-center p-4 opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center transform scale-95 transition-transform">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
-            <div class="input-group">
-                <select id="edit-tipo">
-                    <option value="saida">Despesa (-)</option>
-                    <option value="entrada">Renda (+)</option>
-                </select>
-            </div>
-            <div class="modal-actions">
-                <button id="btnCancelarEdit" class="btn-secondary">Cancelar</button>
-                <button id="btnSalvarEdit" class="btn-primary">Salvar</button>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Confirmar Exclusão</h3>
+            <p class="text-gray-500 text-sm mb-6">Tem certeza que deseja apagar este registro?</p>
+            <div class="flex gap-3">
+                <button id="btn-cancel-confirm" class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Não</button>
+                <button id="btn-do-confirm" class="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-colors shadow-md">Sim, excluir</button>
             </div>
         </div>
     </div>
 
-    <script type="module" src="app.js"></script>
 </body>
-
 </html>
