@@ -35,6 +35,7 @@ const transactionList = document.getElementById('transaction-list');
 
 let doughnutChart = null;
 let evolutionChart = null;
+let categoryChart = null; // <- ADICIONE ESTA LINHA
 
 let currentUser = null;
 let currentTransactions = [];
@@ -220,6 +221,49 @@ const renderCharts = async (totals) => {
             type: 'bar',
             data: { labels: labels, datasets: [{ label: 'Saldo (R$)', data: balances, backgroundColor: bgColors, borderRadius: 4 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } } }
+        });
+    }
+
+    const ctxCategory = document.getElementById('categoryChart');
+    if(ctxCategory) {
+        // Filtrar apenas as despesas do mês atual
+        const expenses = currentTransactions.filter(t => t.tipo === 'saida');
+        
+        // Agrupar e somar os valores por categoria
+        const categoryData = expenses.reduce((acc, curr) => {
+            acc[curr.categoria] = (acc[curr.categoria] || 0) + curr.valor;
+            return acc;
+        }, {});
+
+        // Ordenar do maior gasto para o menor
+        const sortedCategories = Object.entries(categoryData).sort((a, b) => b[1] - a[1]);
+        const labels = sortedCategories.map(item => item[0]);
+        const data = sortedCategories.map(item => item[1]);
+
+        // Paleta de cores para as categorias
+        const colors = ['#EF4444', '#F97316', '#F59E0B', '#8B5CF6', '#EC4899', '#3B82F6', '#14B8A6', '#64748B'];
+
+        if (categoryChart) categoryChart.destroy();
+        categoryChart = new Chart(ctxCategory.getContext('2d'), {
+            type: 'bar',
+            data: { 
+                labels: labels, 
+                datasets: [{ 
+                    label: 'Total Gasto (R$)', 
+                    data: data, 
+                    backgroundColor: colors, 
+                    borderRadius: 4 
+                }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } }, 
+                scales: { 
+                    y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, 
+                    x: { grid: { display: false } } 
+                } 
+            }
         });
     }
 };

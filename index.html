@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <link rel="shortcut icon" href="src/favicon.png" type="image/x-icon">
     <meta charset="UTF-8">
@@ -9,26 +10,29 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
-            theme: { 
-                extend: { 
+            theme: {
+                extend: {
                     colors: { petroleo: { DEFAULT: '#114B4C', dark: '#0A2F30', light: '#1B7577' } },
                     animation: { 'slide-in': 'slideIn 0.3s ease-out forwards' },
                     keyframes: { slideIn: { '0%': { transform: 'translateY(-100%)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } } }
-                } 
+                }
             }
         }
     </script>
     <script type="module" src="./js/app.js" defer></script>
 </head>
+
 <body class="bg-gray-50 text-gray-800 antialiased min-h-screen flex flex-col font-sans">
 
     <div id="toast-container" class="fixed top-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none"></div>
 
-    <div id="login-screen" class="fixed inset-0 bg-gradient-to-br from-petroleo-dark to-petroleo flex flex-col items-center justify-center z-50 transition-opacity duration-500">
+    <div id="login-screen"
+        class="fixed inset-0 bg-gradient-to-br from-petroleo-dark to-petroleo flex flex-col items-center justify-center z-50 transition-opacity duration-500">
         <div class="bg-white p-10 rounded-2xl shadow-2xl max-w-sm w-full text-center">
             <h1 class="text-3xl font-bold text-petroleo mb-2">Finanças App</h1>
             <p class="text-gray-500 mb-8">Acesse seu painel financeiro.</p>
-            <button id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg">
+            <button id="btn-login"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg">
                 Entrar com Google
             </button>
         </div>
@@ -40,30 +44,38 @@
                 <div class="flex items-center gap-8 w-full md:w-auto">
                     <h1 class="text-2xl font-bold tracking-wider">Finanças</h1>
                     <nav class="flex gap-6 text-sm font-medium">
-                        <button class="nav-btn active text-white border-b-2 border-white pb-1" data-target="view-dashboard">Dashboard</button>
-                        <button class="nav-btn text-gray-300 hover:text-white border-b-2 border-transparent hover:border-gray-300 pb-1 transition-all" data-target="view-lancamentos">Lançamentos</button>
+                        <button class="nav-btn active text-white border-b-2 border-white pb-1"
+                            data-target="view-dashboard">Dashboard</button>
+                        <button
+                            class="nav-btn text-gray-300 hover:text-white border-b-2 border-transparent hover:border-gray-300 pb-1 transition-all"
+                            data-target="view-lancamentos">Lançamentos</button>
                     </nav>
                 </div>
-                
+
                 <div class="flex items-center gap-5 w-full md:w-auto justify-between md:justify-end">
-                    <input type="month" id="month-selector" class="bg-white/10 backdrop-blur-md text-white text-sm rounded-lg px-3 py-2 border border-white/20 focus:outline-none focus:ring-2 focus:ring-petroleo-light transition-all cursor-pointer">
-                    
+                    <input type="month" id="month-selector"
+                        class="bg-white/10 backdrop-blur-md text-white text-sm rounded-lg px-3 py-2 border border-white/20 focus:outline-none focus:ring-2 focus:ring-petroleo-light transition-all cursor-pointer">
+
                     <div class="h-6 w-px bg-white/20 hidden md:block"></div>
                     <div class="flex items-center gap-3">
-                        <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-petroleo-light shadow-sm">
-                        <button id="btn-logout" class="text-sm text-gray-300 hover:text-white transition-colors">Sair</button>
+                        <img id="user-avatar" src="" alt="Avatar"
+                            class="w-9 h-9 rounded-full border-2 border-petroleo-light shadow-sm">
+                        <button id="btn-logout"
+                            class="text-sm text-gray-300 hover:text-white transition-colors">Sair</button>
                     </div>
                 </div>
             </div>
         </header>
 
         <main class="max-w-7xl mx-auto px-6 py-8 w-full flex-1">
+
             <div id="view-dashboard" class="view-section transition-opacity duration-300">
                 <div class="flex justify-between items-end mb-8">
                     <h2 class="text-2xl font-semibold text-gray-800">Visão Geral</h2>
                     <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm border border-gray-100">
                         <label for="investment-percent" class="text-sm text-gray-500">Meta Inv.:</label>
-                        <select id="investment-percent" class="bg-transparent text-gray-800 font-medium text-sm focus:outline-none cursor-pointer">
+                        <select id="investment-percent"
+                            class="bg-transparent text-gray-800 font-medium text-sm focus:outline-none cursor-pointer">
                             <option value="0.10">10%</option>
                             <option value="0.15">15%</option>
                             <option value="0.20">20%</option>
@@ -73,38 +85,64 @@
                 </div>
 
                 <section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
-                        <div class="flex items-center justify-between mb-2"><h3 class="text-gray-500 text-sm font-medium">Receitas</h3><span class="bg-green-50 text-green-600 p-2 rounded-lg text-xs">↑</span></div>
+                    <div
+                        class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-gray-500 text-sm font-medium">Receitas</h3><span
+                                class="bg-green-50 text-green-600 p-2 rounded-lg text-xs">↑</span>
+                        </div>
                         <p class="text-3xl font-bold text-gray-800" id="total-income">R$ 0,00</p>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
-                         <div class="flex items-center justify-between mb-2"><h3 class="text-gray-500 text-sm font-medium">Despesas</h3><span class="bg-red-50 text-red-600 p-2 rounded-lg text-xs">↓</span></div>
+                    <div
+                        class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-gray-500 text-sm font-medium">Despesas</h3><span
+                                class="bg-red-50 text-red-600 p-2 rounded-lg text-xs">↓</span>
+                        </div>
                         <p class="text-3xl font-bold text-gray-800" id="total-expense">R$ 0,00</p>
                     </div>
-                    <div class="bg-gradient-to-br from-petroleo to-petroleo-light text-white p-6 rounded-2xl shadow-md flex flex-col justify-between">
+                    <div
+                        class="bg-gradient-to-br from-petroleo to-petroleo-light text-white p-6 rounded-2xl shadow-md flex flex-col justify-between">
                         <h3 class="text-white/80 text-sm font-medium mb-2">Saldo Mensal</h3>
                         <p class="text-3xl font-bold" id="total-balance">R$ 0,00</p>
                     </div>
-                    <div class="bg-gradient-to-br from-gray-800 to-gray-900 text-white p-6 rounded-2xl shadow-md flex flex-col justify-between relative overflow-hidden">
+                    <div
+                        class="bg-gradient-to-br from-gray-800 to-gray-900 text-white p-6 rounded-2xl shadow-md flex flex-col justify-between relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-bl-full"></div>
-                        <h3 class="text-gray-400 text-sm font-medium mb-2">Reserva (<span id="invest-label">10%</span>)</h3>
+                        <h3 class="text-gray-400 text-sm font-medium mb-2">Reserva (<span id="invest-label">10%</span>)
+                        </h3>
                         <p class="text-3xl font-bold text-green-400" id="total-investment">R$ 0,00</p>
                     </div>
                 </section>
 
                 <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
                     <div class="flex justify-between items-end mb-3">
-                        <div><h3 class="text-sm font-medium text-gray-500">Saúde Financeira (Saldo vs Receita)</h3><p id="status-message" class="text-lg font-semibold text-gray-800 mt-1">Analisando...</p></div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500">Saúde Financeira (Saldo vs Receita)</h3>
+                            <p id="status-message" class="text-lg font-semibold text-gray-800 mt-1">Analisando...</p>
+                        </div>
                         <span id="status-percentage" class="text-2xl font-bold text-gray-300">0%</span>
                     </div>
-                    <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden flex"><div id="status-bar-fill" class="h-full rounded-full transition-all duration-1000 w-0 bg-gray-300"></div></div>
+                    <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden flex">
+                        <div id="status-bar-fill"
+                            class="h-full rounded-full transition-all duration-1000 w-0 bg-gray-300"></div>
+                    </div>
                 </section>
+
+                                   <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                        <h3 class="text-sm font-medium text-gray-500 mb-6">Gastos por Categoria (Mês Atual)</h3>
+                        <div class="relative h-64 w-full">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </section>
 
                 <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-1">
                         <h3 class="text-sm font-medium text-gray-500 mb-6">Receitas vs Despesas</h3>
-                        <div class="relative h-56 w-full flex justify-center items-center"><canvas id="doughnutChart"></canvas></div>
+                        <div class="relative h-56 w-full flex justify-center items-center"><canvas
+                                id="doughnutChart"></canvas></div>
                     </div>
+ 
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
                         <h3 class="text-sm font-medium text-gray-500 mb-6">Evolução do Saldo (Últimos 6 Meses)</h3>
                         <div class="relative h-56 w-full"><canvas id="evolutionChart"></canvas></div>
@@ -115,7 +153,8 @@
             <div id="view-lancamentos" class="view-section hidden transition-opacity duration-300">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-semibold text-gray-800">Registros do Mês</h2>
-                    <button id="btn-open-modal" class="bg-petroleo hover:bg-petroleo-light text-white font-medium py-2 px-5 rounded-lg shadow-md transition-all flex items-center gap-2 hover:-translate-y-0.5">
+                    <button id="btn-open-modal"
+                        class="bg-petroleo hover:bg-petroleo-light text-white font-medium py-2 px-5 rounded-lg shadow-md transition-all flex items-center gap-2 hover:-translate-y-0.5">
                         <span class="text-lg leading-none">+</span> Novo
                     </button>
                 </div>
@@ -133,7 +172,7 @@
                                 </tr>
                             </thead>
                             <tbody id="transaction-list" class="text-sm divide-y divide-gray-50 bg-white">
-                                </tbody>
+                            </tbody>
                         </table>
                     </div>
                 </section>
@@ -141,24 +180,28 @@
         </main>
     </div>
 
-    <div id="form-modal" class="hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[55] flex items-center justify-center p-4 transition-opacity">
+    <div id="form-modal"
+        class="hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[55] flex items-center justify-center p-4 transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                 <h2 class="text-xl font-semibold text-petroleo" id="form-title">Novo Lançamento</h2>
-                <button id="btn-close-modal" class="text-gray-400 hover:text-gray-600 transition-colors text-2xl leading-none">&times;</button>
+                <button id="btn-close-modal"
+                    class="text-gray-400 hover:text-gray-600 transition-colors text-2xl leading-none">&times;</button>
             </div>
-            
+
             <form id="transaction-form" class="p-6 space-y-4">
                 <input type="hidden" id="edit-id">
-                
+
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2 sm:col-span-1">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
-                        <input type="date" id="date-input" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-petroleo/20 focus:border-petroleo transition-all">
+                        <input type="date" id="date-input" required
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-petroleo/20 focus:border-petroleo transition-all">
                     </div>
                     <div class="col-span-2 sm:col-span-1">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                        <select id="category-input" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-petroleo/20 focus:border-petroleo transition-all cursor-pointer">
+                        <select id="category-input" required
+                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-petroleo/20 focus:border-petroleo transition-all cursor-pointer">
                             <option value="Moradia">🏠 Moradia</option>
                             <option value="Alimentação">🍔 Alimentação</option>
                             <option value="Transporte">🚗 Transporte</option>
@@ -176,12 +219,14 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                    <input type="text" id="desc-input" required placeholder="Ex: Salário, Mercado..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-petroleo/20 focus:border-petroleo transition-all">
+                    <input type="text" id="desc-input" required placeholder="Ex: Salário, Mercado..."
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-petroleo/20 focus:border-petroleo transition-all">
                 </div>
-                
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Valor da Parcela (R$)</label>
-                    <input type="number" id="amount-input" required step="0.01" min="0.01" placeholder="0,00" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-petroleo/20 focus:border-petroleo transition-all">
+                    <input type="number" id="amount-input" required step="0.01" min="0.01" placeholder="0,00"
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-petroleo/20 focus:border-petroleo transition-all">
                 </div>
 
                 <div>
@@ -189,55 +234,77 @@
                     <div class="flex gap-4 p-1 bg-gray-50 rounded-xl border border-gray-200">
                         <label class="flex-1 text-center cursor-pointer relative">
                             <input type="radio" name="type" value="entrada" checked class="peer sr-only">
-                            <div class="py-2 rounded-lg text-sm font-medium text-gray-500 peer-checked:bg-green-100 peer-checked:text-green-700 transition-all">Entrada</div>
+                            <div
+                                class="py-2 rounded-lg text-sm font-medium text-gray-500 peer-checked:bg-green-100 peer-checked:text-green-700 transition-all">
+                                Entrada</div>
                         </label>
                         <label class="flex-1 text-center cursor-pointer relative">
                             <input type="radio" name="type" value="saida" class="peer sr-only">
-                            <div class="py-2 rounded-lg text-sm font-medium text-gray-500 peer-checked:bg-red-100 peer-checked:text-red-700 transition-all">Saída</div>
+                            <div
+                                class="py-2 rounded-lg text-sm font-medium text-gray-500 peer-checked:bg-red-100 peer-checked:text-red-700 transition-all">
+                                Saída</div>
                         </label>
                     </div>
                 </div>
 
                 <div id="installment-container" class="pt-2 border-t border-gray-100">
                     <label class="flex items-center gap-2 cursor-pointer w-fit">
-                        <input type="checkbox" id="is-installment" class="w-4 h-4 text-petroleo border-gray-300 rounded focus:ring-petroleo">
+                        <input type="checkbox" id="is-installment"
+                            class="w-4 h-4 text-petroleo border-gray-300 rounded focus:ring-petroleo">
                         <span class="text-sm font-medium text-gray-700">Compra Parcelada?</span>
                     </label>
-                    
-                    <div id="installment-fields" class="hidden grid-cols-2 gap-4 mt-3 bg-petroleo/5 p-4 rounded-xl border border-petroleo/10">
+
+                    <div id="installment-fields"
+                        class="hidden grid-cols-2 gap-4 mt-3 bg-petroleo/5 p-4 rounded-xl border border-petroleo/10">
                         <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Parcela Atual (Mês do Lançamento)</label>
-                            <input type="number" id="current-installment" min="1" value="1" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-petroleo text-sm">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Parcela Atual (Mês do
+                                Lançamento)</label>
+                            <input type="number" id="current-installment" min="1" value="1"
+                                class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-petroleo text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Total de Parcelas</label>
-                            <input type="number" id="total-installments" min="2" value="2" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-petroleo text-sm">
+                            <input type="number" id="total-installments" min="2" value="2"
+                                class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-petroleo text-sm">
                         </div>
-                        <p class="col-span-2 text-xs text-gray-500 italic mt-1">O sistema gerará automaticamente os lançamentos dos próximos meses.</p>
+                        <p class="col-span-2 text-xs text-gray-500 italic mt-1">O sistema gerará automaticamente os
+                            lançamentos dos próximos meses.</p>
                     </div>
                 </div>
 
                 <div class="pt-4 flex gap-3">
-                    <button type="button" id="btn-cancel-modal" class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Cancelar</button>
-                    <button type="submit" id="btn-submit" class="flex-1 px-4 py-2.5 bg-petroleo hover:bg-petroleo-light text-white font-medium rounded-xl shadow-md transition-colors">Salvar</button>
+                    <button type="button" id="btn-cancel-modal"
+                        class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Cancelar</button>
+                    <button type="submit" id="btn-submit"
+                        class="flex-1 px-4 py-2.5 bg-petroleo hover:bg-petroleo-light text-white font-medium rounded-xl shadow-md transition-colors">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="confirm-modal" class="hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[65] flex items-center justify-center p-4 opacity-0 transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center transform scale-95 transition-transform">
+    <div id="confirm-modal"
+        class="hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[65] flex items-center justify-center p-4 opacity-0 transition-opacity">
+        <div
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center transform scale-95 transition-transform">
             <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
             </div>
             <h3 class="text-xl font-bold text-gray-800 mb-2">Confirmar Exclusão</h3>
             <p class="text-gray-500 text-sm mb-6">Tem certeza que deseja apagar este registro?</p>
             <div class="flex gap-3">
-                <button id="btn-cancel-confirm" class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Não</button>
-                <button id="btn-do-confirm" class="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-colors shadow-md">Sim, excluir</button>
+                <button id="btn-cancel-confirm"
+                    class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Não</button>
+                <button id="btn-do-confirm"
+                    class="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-colors shadow-md">Sim,
+                    excluir</button>
             </div>
         </div>
     </div>
 
 </body>
+
 </html>
