@@ -1,4 +1,4 @@
-import { db } from './firebase-config.js';
+import { db } from '../js/firebase-config.js';
 // Adicionado o writeBatch nas importações
 import { collection, doc, onSnapshot, query, where, updateDoc, deleteDoc, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 

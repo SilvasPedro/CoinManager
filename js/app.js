@@ -1,6 +1,6 @@
-import { auth, provider } from './firebase-config.js';
+import { auth, provider } from '../js/firebase-config.js';
 import { signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { FinanceService } from './finance-service.js';
+import { FinanceService } from '../js/finance-service.js';
 
 // ==========================================
 // ELEMENTOS GLOBAIS DA UI
