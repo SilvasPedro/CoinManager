@@ -67,7 +67,7 @@ const openFormModal = (isEdit = false) => {
     formModal.classList.remove('hidden');
     formTitle.textContent = isEdit ? 'Editar Lançamento' : 'Novo Lançamento';
     btnSubmit.textContent = isEdit ? 'Atualizar' : 'Salvar';
-    
+
     // Oculta a opção de parcelar caso seja uma edição (para evitar conflitos estruturais)
     if (isEdit) {
         installmentContainer.classList.add('hidden');
@@ -195,7 +195,7 @@ const updateFinancialStatus = (totals) => {
 
 const renderCharts = async (totals) => {
     const ctxDoughnut = document.getElementById('doughnutChart');
-    if(ctxDoughnut) {
+    if (ctxDoughnut) {
         if (doughnutChart) doughnutChart.destroy();
         doughnutChart = new Chart(ctxDoughnut.getContext('2d'), {
             type: 'doughnut',
@@ -205,10 +205,10 @@ const renderCharts = async (totals) => {
     }
 
     const ctxEvolution = document.getElementById('evolutionChart');
-    if(ctxEvolution && currentUser) {
+    if (ctxEvolution && currentUser) {
         const currentSelectedMonth = document.getElementById('month-selector').value;
         const evolutionData = await FinanceService.getEvolutionData(currentUser.uid, currentSelectedMonth);
-        
+
         const labels = evolutionData.map(d => {
             const [year, month] = d.month.split('-');
             return `${month}/${year.slice(-2)}`;
@@ -225,10 +225,10 @@ const renderCharts = async (totals) => {
     }
 
     const ctxCategory = document.getElementById('categoryChart');
-    if(ctxCategory) {
+    if (ctxCategory) {
         // Filtrar apenas as despesas do mês atual
         const expenses = currentTransactions.filter(t => t.tipo === 'saida');
-        
+
         // Agrupar e somar os valores por categoria
         const categoryData = expenses.reduce((acc, curr) => {
             acc[curr.categoria] = (acc[curr.categoria] || 0) + curr.valor;
@@ -246,23 +246,23 @@ const renderCharts = async (totals) => {
         if (categoryChart) categoryChart.destroy();
         categoryChart = new Chart(ctxCategory.getContext('2d'), {
             type: 'bar',
-            data: { 
-                labels: labels, 
-                datasets: [{ 
-                    label: 'Total Gasto (R$)', 
-                    data: data, 
-                    backgroundColor: colors, 
-                    borderRadius: 4 
-                }] 
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Gasto (R$)',
+                    data: data,
+                    backgroundColor: colors,
+                    borderRadius: 4
+                }]
             },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { legend: { display: false } }, 
-                scales: { 
-                    y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, 
-                    x: { grid: { display: false } } 
-                } 
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+                    x: { grid: { display: false } }
+                }
             }
         });
     }
@@ -286,20 +286,18 @@ document.getElementById('investment-percent').addEventListener('change', updateD
 
 const renderList = (transactions) => {
     transactionList.innerHTML = '';
-    
+
     if (transactions.length === 0) {
-        transactionList.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-gray-400">Nenhum registro encontrado para este mês.</td></tr>`;
-        return;
+        transactionList.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-gray-400 block md:table-cell">Nenhum registro encontrado para este mês.</td></tr>`; return;
     }
 
     transactions.forEach(t => {
         const isIncome = t.tipo === 'entrada';
-        const typeLabel = isIncome 
-            ? `<span class="bg-green-100/50 text-green-700 border border-green-200 text-xs px-2.5 py-1 rounded-md font-medium">Entrada</span>` 
+        const typeLabel = isIncome
+            ? `<span class="bg-green-100/50 text-green-700 border border-green-200 text-xs px-2.5 py-1 rounded-md font-medium">Entrada</span>`
             : `<span class="bg-red-100/50 text-red-700 border border-red-200 text-xs px-2.5 py-1 rounded-md font-medium">Saída</span>`;
         const valueColor = isIncome ? 'text-petroleo' : 'text-red-500';
 
-        // Mapeamento visual das Categorias cadastradas na base
         const categoryEmojis = {
             "Moradia": "🏠 Moradia", "Alimentação": "🍔 Alimentação", "Transporte": "🚗 Transporte", "Lazer": "🎉 Lazer",
             "Saúde": "💊 Saúde", "Educação": "📚 Educação", "Contas": "💡 Contas", "Salário": "💰 Salário",
@@ -308,17 +306,45 @@ const renderList = (transactions) => {
         const catText = categoryEmojis[t.categoria] || t.categoria || '📦 Outros';
 
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50/50 transition-colors";
-        // NOTA: Removidas as classes de opacidade que escondiam os botões (opacity-0 group-hover:opacity-100)
+
+        // Classes adaptativas: Flex no mobile, linha de tabela no desktop
+        // Adiciona fundo branco, bordas arredondadas e sombra apenas no celular (desativando no desktop com md:none)
+        tr.className = "flex flex-col md:table-row bg-white rounded-2xl md:rounded-none shadow-sm md:shadow-none border border-gray-100 md:border-none hover:bg-gray-50/50 transition-colors p-5 md:p-0";
         tr.innerHTML = `
-            <td class="px-6 py-4 text-gray-500">${formatDateBR(t.data)}</td>
-            <td class="px-6 py-4">
-                <div class="text-gray-800 font-medium">${t.descricao}</div>
+            <td class="block md:table-cell md:px-6 md:py-4 text-sm text-gray-500 mb-2 md:mb-0">
+                <div class="flex justify-between items-center md:block">
+                    <span>${formatDateBR(t.data)}</span>
+                    <span class="md:hidden">${typeLabel}</span>
+                </div>
+            </td>
+
+            <td class="block md:table-cell md:px-6 md:py-4 mb-3 md:mb-0">
+                <div class="text-gray-800 font-medium text-base md:text-sm">${t.descricao}</div>
                 <div class="text-xs text-gray-500 mt-0.5">${catText}</div>
             </td>
-            <td class="px-6 py-4">${typeLabel}</td>
-            <td class="px-6 py-4 text-right font-semibold ${valueColor}">${isIncome ? '+' : '-'} ${formatCurrency(t.valor)}</td>
-            <td class="px-6 py-4 text-center">
+
+            <td class="hidden md:table-cell md:px-6 md:py-4">
+                ${typeLabel}
+            </td>
+
+            <td class="block md:table-cell md:px-6 md:py-4 md:text-right">
+                <div class="flex justify-between items-center md:block pt-3 md:pt-0 border-t border-gray-100 md:border-none">
+                    <span class="font-bold text-lg md:text-base md:font-semibold ${valueColor}">
+                        ${isIncome ? '+' : '-'} ${formatCurrency(t.valor)}
+                    </span>
+                    
+                    <div class="flex items-center gap-2 md:hidden">
+                        <button data-id="${t.id}" class="btn-edit text-blue-500 hover:bg-blue-50 p-2 rounded-lg bg-gray-50 border border-gray-100 transition-all" title="Editar">
+                            <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                        <button data-id="${t.id}" class="btn-delete text-red-500 hover:bg-red-50 p-2 rounded-lg bg-gray-50 border border-gray-100 transition-all" title="Excluir">
+                            <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </td>
+
+            <td class="hidden md:table-cell md:px-6 md:py-4 text-center">
                 <div class="flex items-center justify-center gap-3">
                     <button data-id="${t.id}" class="btn-edit text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded transition-all" title="Editar">
                         <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
@@ -357,7 +383,7 @@ transactionList.addEventListener('click', (e) => {
             document.getElementById('amount-input').value = tx.valor;
             // Remove a parte de parcelas do nome (ex: "(1/3)") para editar de forma mais limpa, se quiser
             // Aqui deixamos original para evitar regex complexo, mas preenche a categoria certa:
-            
+
             const catInput = document.getElementById('category-input');
             if (Array.from(catInput.options).some(opt => opt.value === tx.categoria)) {
                 catInput.value = tx.categoria;
@@ -382,7 +408,7 @@ form.addEventListener('submit', async (e) => {
     const btnTextOriginal = btnSubmit.textContent;
     btnSubmit.disabled = true;
     btnSubmit.innerHTML = `<span class="opacity-70">Processando...</span>`;
-    
+
     const data = document.getElementById('date-input').value;
     const desc = document.getElementById('desc-input').value;
     const amount = document.getElementById('amount-input').value;
@@ -404,8 +430,8 @@ form.addEventListener('submit', async (e) => {
                 };
             }
             await FinanceService.addTransaction(currentUser.uid, data, desc, amount, type, cat, installmentData);
-            
-            if(installmentData) {
+
+            if (installmentData) {
                 showToast(`As ${parseInt(installmentData.total) - parseInt(installmentData.current) + 1} parcelas foram geradas!`, 'success');
             } else {
                 showToast('Lançamento adicionado!', 'success');
@@ -443,7 +469,7 @@ onAuthStateChanged(auth, (user) => {
         currentUser = user;
         loginScreen.classList.add('opacity-0', 'pointer-events-none');
         setTimeout(() => loginScreen.classList.add('hidden'), 500);
-        
+
         mainApp.classList.remove('hidden');
         document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/150';
         loadDataForMonth(monthSelector.value);

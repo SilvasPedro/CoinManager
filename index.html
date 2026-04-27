@@ -129,12 +129,12 @@
                     </div>
                 </section>
 
-                                   <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
-                        <h3 class="text-sm font-medium text-gray-500 mb-6">Gastos por Categoria (Mês Atual)</h3>
-                        <div class="relative h-64 w-full">
-                            <canvas id="categoryChart"></canvas>
-                        </div>
-                    </section>
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                    <h3 class="text-sm font-medium text-gray-500 mb-6">Gastos por Categoria (Mês Atual)</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </section>
 
                 <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-1">
@@ -142,7 +142,7 @@
                         <div class="relative h-56 w-full flex justify-center items-center"><canvas
                                 id="doughnutChart"></canvas></div>
                     </div>
- 
+
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
                         <h3 class="text-sm font-medium text-gray-500 mb-6">Evolução do Saldo (Últimos 6 Meses)</h3>
                         <div class="relative h-56 w-full"><canvas id="evolutionChart"></canvas></div>
@@ -159,10 +159,12 @@
                     </button>
                 </div>
 
-                <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="overflow-x-auto">
+                <section
+                    class="md:bg-white md:rounded-2xl md:shadow-sm md:border md:border-gray-100 md:overflow-hidden">
+                    <div class="overflow-x-auto pt-2 md:pt-0">
                         <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50/80 backdrop-blur-sm border-b border-gray-100">
+                            <thead
+                                class="hidden md:table-header-group bg-gray-50/80 backdrop-blur-sm border-b border-gray-100">
                                 <tr class="text-xs text-gray-500 uppercase tracking-wider">
                                     <th class="px-6 py-4 font-semibold">Data</th>
                                     <th class="px-6 py-4 font-semibold">Descrição</th>
@@ -171,7 +173,9 @@
                                     <th class="px-6 py-4 font-semibold text-center">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="transaction-list" class="text-sm divide-y divide-gray-50 bg-white">
+
+                            <tbody id="transaction-list"
+                                class="text-sm flex flex-col gap-4 md:table-row-group md:divide-y md:divide-gray-50 md:bg-white">
                             </tbody>
                         </table>
                     </div>
