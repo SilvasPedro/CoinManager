@@ -35,7 +35,7 @@ const transactionList = document.getElementById('transaction-list');
 
 let doughnutChart = null;
 let evolutionChart = null;
-let categoryChart = null; // <- ADICIONE ESTA LINHA
+let categoryChart = null;
 
 let currentUser = null;
 let currentTransactions = [];
@@ -51,7 +51,7 @@ const formatDateBR = (dateStr) => dateStr ? dateStr.split('-').reverse().join('/
 const showToast = (message, type = 'success') => {
     const toast = document.createElement('div');
     const bgClass = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-petroleo';
-    toast.className = `${bgClass} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 pointer-events-auto animate-slide-in z-[70]`;
+    toast.className = `${bgClass} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 pointer-events-auto animate-slide-in z-[80]`;
     toast.innerHTML = `<span class="text-sm font-medium">${message}</span>`;
     toastContainer.appendChild(toast);
     setTimeout(() => {
@@ -68,7 +68,6 @@ const openFormModal = (isEdit = false) => {
     formTitle.textContent = isEdit ? 'Editar Lançamento' : 'Novo Lançamento';
     btnSubmit.textContent = isEdit ? 'Atualizar' : 'Salvar';
 
-    // Oculta a opção de parcelar caso seja uma edição (para evitar conflitos estruturais)
     if (isEdit) {
         installmentContainer.classList.add('hidden');
         chkInstallment.checked = false;
@@ -91,7 +90,6 @@ btnOpenModal.addEventListener('click', () => openFormModal(false));
 btnCloseModal.addEventListener('click', closeFormModal);
 btnCancelModal.addEventListener('click', closeFormModal);
 
-// Lógica Visual do Checkbox de Parcela
 chkInstallment.addEventListener('change', (e) => {
     if (e.target.checked) {
         installmentFields.classList.remove('hidden');
@@ -159,7 +157,7 @@ const updateFinancialStatus = (totals) => {
 
     if (totals.income === 0) {
         elMessage.textContent = "Sem receitas registradas neste mês.";
-        elMessage.className = "text-lg font-semibold text-gray-500 mt-1";
+        elMessage.className = "text-base md:text-lg font-semibold text-gray-500 mt-1";
         elPercentage.textContent = "0%";
         elBarFill.style.width = "0%";
         elBarFill.className = "h-full rounded-full transition-all duration-1000 w-0 bg-gray-300";
@@ -172,24 +170,24 @@ const updateFinancialStatus = (totals) => {
     let statusText = ""; let colorClass = ""; let barColorClass = "";
 
     if (percent < 10) {
-        statusText = "Crítico: Cuidado, você está chegando no limite dos gastos.";
+        statusText = "Crítico: Cuidado com os gastos!";
         colorClass = "text-red-600"; barColorClass = "bg-red-500";
     } else if (percent >= 10 && percent <= 20) {
-        statusText = "Atenção: Revise suas contas para guardar mais.";
+        statusText = "Atenção: Revise as suas contas.";
         colorClass = "text-orange-500"; barColorClass = "bg-orange-500";
     } else if (percent > 20 && percent <= 30) {
-        statusText = "Estável: Finanças sob controle, mas podem melhorar.";
+        statusText = "Estável: Finanças sob controle.";
         colorClass = "text-yellow-600"; barColorClass = "bg-yellow-400";
     } else if (percent > 30 && percent <= 50) {
-        statusText = "Bom: Margem segura e ótimo potencial de investimento.";
+        statusText = "Bom: Ótimo potencial de investimento.";
         colorClass = "text-lime-600"; barColorClass = "bg-lime-500";
     } else {
         statusText = "Excelente: Saúde financeira perfeita!";
         colorClass = "text-green-600"; barColorClass = "bg-green-500";
     }
 
-    elMessage.textContent = statusText; elMessage.className = `text-lg font-semibold mt-1 ${colorClass}`;
-    elPercentage.textContent = `${percent.toFixed(1)}%`; elPercentage.className = `text-2xl font-bold ${colorClass}`;
+    elMessage.textContent = statusText; elMessage.className = `text-base md:text-lg font-semibold mt-1 ${colorClass}`;
+    elPercentage.textContent = `${percent.toFixed(1)}%`; elPercentage.className = `text-xl md:text-2xl font-bold ${colorClass}`;
     elBarFill.style.width = `${barWidth}%`; elBarFill.className = `h-full rounded-full transition-all duration-1000 ${barColorClass}`;
 };
 
@@ -200,7 +198,7 @@ const renderCharts = async (totals) => {
         doughnutChart = new Chart(ctxDoughnut.getContext('2d'), {
             type: 'doughnut',
             data: { labels: ['Receitas', 'Despesas'], datasets: [{ data: [totals.income, totals.expense], backgroundColor: ['#1B7577', '#EF4444'], borderWidth: 0, hoverOffset: 4 }] },
-            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } }
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } } } }
         });
     }
 
@@ -226,21 +224,17 @@ const renderCharts = async (totals) => {
 
     const ctxCategory = document.getElementById('categoryChart');
     if (ctxCategory) {
-        // Filtrar apenas as despesas do mês atual
         const expenses = currentTransactions.filter(t => t.tipo === 'saida');
 
-        // Agrupar e somar os valores por categoria
         const categoryData = expenses.reduce((acc, curr) => {
             acc[curr.categoria] = (acc[curr.categoria] || 0) + curr.valor;
             return acc;
         }, {});
 
-        // Ordenar do maior gasto para o menor
         const sortedCategories = Object.entries(categoryData).sort((a, b) => b[1] - a[1]);
         const labels = sortedCategories.map(item => item[0]);
         const data = sortedCategories.map(item => item[1]);
 
-        // Paleta de cores para as categorias
         const colors = ['#EF4444', '#F97316', '#F59E0B', '#8B5CF6', '#EC4899', '#3B82F6', '#14B8A6', '#64748B'];
 
         if (categoryChart) categoryChart.destroy();
@@ -276,10 +270,7 @@ const updateDashboard = async () => {
     document.getElementById('total-expense').textContent = formatCurrency(totals.expense);
     document.getElementById('total-balance').textContent = formatCurrency(totals.balance);
     document.getElementById('total-investment').textContent = formatCurrency(totals.investment);
-
-    // ATUALIZAÇÃO: Mostra o quanto falta pagar
     document.getElementById('pending-expense').textContent = formatCurrency(totals.pendingExpense);
-
     document.getElementById('invest-label').textContent = `${(percent * 100).toFixed(0)}%`;
 
     updateFinancialStatus(totals);
@@ -309,26 +300,20 @@ const renderList = (transactions) => {
         };
         const catText = categoryEmojis[t.categoria] || t.categoria || '📦 Outros';
 
-        // Lógica do botão de pago (Renderizado apenas se for uma despesa)
-// Lógica do botão de pago com visual melhorado
         const paidBtn = t.tipo === 'saida' ? `
             <button data-id="${t.id}" data-pago="${t.pago}" class="btn-toggle-paid p-2 md:p-1.5 rounded-lg md:rounded transition-all flex items-center justify-center ${t.pago ? 'bg-green-100/50 hover:bg-green-200/50' : 'bg-gray-50 md:bg-transparent border border-gray-100 md:border-none hover:bg-orange-50'}" title="${t.pago ? 'Marcar como Pendente' : 'Marcar como Pago'}">
-                ${t.pago 
-                    // SVG de Pago (Círculo sólido com check branco vazado)
-                    ? `<svg class="w-6 h-6 md:w-5 md:h-5 pointer-events-none text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                ${t.pago
+                ? `<svg class="w-6 h-6 md:w-5 md:h-5 pointer-events-none text-green-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                        </svg>`
-                    // SVG de Pendente (Círculo cinza com check vazado)
-                    : `<svg class="w-6 h-6 md:w-5 md:h-5 pointer-events-none text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                : `<svg class="w-6 h-6 md:w-5 md:h-5 pointer-events-none text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                        </svg>`
-                }
+            }
             </button>
         ` : '';
 
         const tr = document.createElement('tr');
-
-        // Mantém as classes do layout de Cartões Separados no mobile
         tr.className = "flex flex-col md:table-row bg-white rounded-2xl md:rounded-none shadow-sm md:shadow-none border border-gray-100 md:border-none hover:bg-gray-50/50 transition-colors p-5 md:p-0";
 
         tr.innerHTML = `
@@ -382,8 +367,6 @@ const renderList = (transactions) => {
     });
 }
 
-
-
 transactionList.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
@@ -406,7 +389,7 @@ transactionList.addEventListener('click', (e) => {
             document.getElementById('date-input').value = tx.data || '';
             document.getElementById('desc-input').value = tx.descricao;
             document.getElementById('amount-input').value = tx.valor;
-            
+
             const catInput = document.getElementById('category-input');
             if (Array.from(catInput.options).some(opt => opt.value === tx.categoria)) {
                 catInput.value = tx.categoria;
@@ -418,15 +401,13 @@ transactionList.addEventListener('click', (e) => {
             openFormModal(true);
         }
     } else if (btn.classList.contains('btn-toggle-paid')) {
-        // LÓGICA DO BOTÃO PAGO CORRIGIDA
         const id = btn.dataset.id;
-        // Pega o valor atual como booleano (se for 'true' vira true, qualquer outra coisa vira false)
-        const currentStatus = btn.dataset.pago === 'true'; 
-        
+        const currentStatus = btn.dataset.pago === 'true';
+
         FinanceService.togglePaidStatus(id, currentStatus)
             .then(() => {
                 showToast(currentStatus ? 'Marcado como pendente' : 'Marcado como pago', 'success');
-                updateDashboard(); // Recalcula o dashboard imediatamente
+                updateDashboard();
             })
             .catch(err => {
                 console.error("Erro ao alterar status: ", err);
@@ -458,7 +439,6 @@ form.addEventListener('submit', async (e) => {
             await FinanceService.updateTransaction(editIdInput.value, data, desc, amount, type, cat);
             showToast('Lançamento atualizado!', 'success');
         } else {
-            // Verifica se é parcelado
             let installmentData = null;
             if (chkInstallment.checked) {
                 installmentData = {
@@ -509,9 +489,22 @@ onAuthStateChanged(auth, (user) => {
         setTimeout(() => loginScreen.classList.add('hidden'), 500);
 
         mainApp.classList.remove('hidden');
-        document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/150';
+
+        const photoURL = user.photoURL || 'https://via.placeholder.com/150';
+        // Atualiza a imagem tanto no Desktop quanto no Mobile
+        const avatarDesktop = document.getElementById('user-avatar');
+        if (avatarDesktop) avatarDesktop.src = photoURL;
+
+        const avatarMobile = document.getElementById('user-avatar-mobile');
+        if (avatarMobile) avatarMobile.src = photoURL;
+
+        // ADICIONADO: Exibe o nome do utilizador no perfil da Sidebar (Desktop)
+        const firstName = user.displayName ? user.displayName.split(' ')[0] : 'Usuário';
+        const nameDisplay = document.getElementById('user-name-display');
+        if (nameDisplay) nameDisplay.textContent = firstName;
+
         loadDataForMonth(monthSelector.value);
-        showToast(`Bem-vindo, ${user.displayName.split(' ')[0]}!`, 'success');
+        showToast(`Bem-vindo, ${firstName}!`, 'success');
     } else {
         currentUser = null;
         loginScreen.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
@@ -522,3 +515,8 @@ onAuthStateChanged(auth, (user) => {
 
 document.getElementById('btn-login').addEventListener('click', () => signInWithPopup(auth, provider));
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+// Listener para o botão de logout no mobile
+const btnLogoutMobile = document.getElementById('btn-logout-mobile');
+if (btnLogoutMobile) {
+    btnLogoutMobile.addEventListener('click', () => signOut(auth));
+}
